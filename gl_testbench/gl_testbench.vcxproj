@@ -155,7 +155,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConstantBuffer.cpp" />
-    <ClCompile Include="Dx12Renderer.cpp" />
+    <ClCompile Include="Dx12\Dx12Renderer.cpp" />
     <ClCompile Include="OpenGL\ConstantBufferGL.cpp" />
     <ClCompile Include="OpenGL\MaterialGL.cpp" />
     <ClCompile Include="OpenGL\MeshGL.cpp" />
@@ -182,9 +182,9 @@
   <ItemGroup>
     <ClInclude Include="..\include\stb_image.h" />
     <ClInclude Include="ConstantBuffer.h" />
-    <ClInclude Include="d3dx12.h" />
-    <ClInclude Include="Dx12Renderer.h" />
-    <ClInclude Include="functions.h" />
+    <ClInclude Include="Dx12\d3dx12.h" />
+    <ClInclude Include="Dx12\Dx12Renderer.h" />
+    <ClInclude Include="Dx12\functions.h" />
     <ClInclude Include="OpenGL\ConstantBufferGL.h" />
     <ClInclude Include="OpenGL\MaterialGL.h" />
     <ClInclude Include="OpenGL\MeshGL.h" />

@@ -17,7 +17,7 @@
       <UniqueIdentifier>{7fda8481-d7dd-4a62-a90b-96d3f03f423b}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Dx12">
-      <UniqueIdentifier>{ca49512e-77d9-488a-b06a-87835d1a35b0}</UniqueIdentifier>
+      <UniqueIdentifier>{e71e1752-0f4c-4a12-8523-b979167f09c4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -90,7 +90,7 @@
     <ClCompile Include="OpenGL\VertexBufferGL.cpp">
       <Filter>Source Files\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="Dx12Renderer.cpp">
+    <ClCompile Include="Dx12\Dx12Renderer.cpp">
       <Filter>Source Files\Dx12</Filter>
     </ClCompile>
   </ItemGroup>
@@ -167,13 +167,13 @@
     <ClInclude Include="OpenGL\VertexBufferGL.h">
       <Filter>Source Files\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="Dx12Renderer.h">
+    <ClInclude Include="Dx12\d3dx12.h">
       <Filter>Source Files\Dx12</Filter>
     </ClInclude>
-    <ClInclude Include="d3dx12.h">
+    <ClInclude Include="Dx12\Dx12Renderer.h">
       <Filter>Source Files\Dx12</Filter>
     </ClInclude>
-    <ClInclude Include="functions.h">
+    <ClInclude Include="Dx12\functions.h">
       <Filter>Source Files\Dx12</Filter>
     </ClInclude>
   </ItemGroup>
