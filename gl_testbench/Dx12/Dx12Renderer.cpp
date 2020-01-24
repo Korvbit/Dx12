@@ -76,6 +76,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	factory = nullptr;
 	CreateDXGIFactory(IID_PPV_ARGS(&factory));
 
+	// Create swapchain
 	IDXGISwapChain1* swapChain1 = nullptr;
 	
 	DXGI_SWAP_CHAIN_DESC1 scDesc = {};
@@ -100,6 +101,50 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		nullptr,
 		reinterpret_cast<IDXGISwapChain1**>(&swapChain)
 	);
+
+	// Create render target descriptors
+	D3D12_DESCRIPTOR_HEAP_DESC dhd = {};
+	dhd.NumDescriptors = frameBufferCount;
+	dhd.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+
+	hr = device->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&rtvDescriptorHeap));
+
+	rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	D3D12_CPU_DESCRIPTOR_HANDLE cdh = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+
+	// Create render targets
+	for (UINT i = 0; i < frameBufferCount; ++i) {
+		hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i]));
+		device->CreateRenderTargetView(renderTargets[i], nullptr, cdh);
+		cdh.ptr += rtvDescriptorSize;
+	}
+
+	// Initialize the viewport
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = width;
+	viewport.Height = height;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+
+	// Initialize the scissor rect
+	scissorRect.left = 0;
+	scissorRect.top = 0;
+	scissorRect.right = width;
+	scissorRect.bottom = height;
+
+	// Create root signature
+	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+	rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+	ID3DBlob* sBlob;	// For catching error messages..?
+	hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
+	if (FAILED(hr))
+		return false;
+
+	hr = device->CreateRootSignature(0, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+	if (FAILED(hr))
+		return false;
 
 	SafeRelease(&factory);
 

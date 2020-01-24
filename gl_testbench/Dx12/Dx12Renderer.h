@@ -45,6 +45,12 @@ public:
 	HWND hwnd = NULL;
 	LPCTSTR WindowName = L"temp";
 	LPCTSTR WindowTitle = L"temp";
+	D3D12_VIEWPORT viewport; // area that output from rasterizer will be stretched to.
+	D3D12_RECT scissorRect; // the area to draw in. pixels outside that area will not be drawn onto
+	ID3D12RootSignature* rootSignature;
+	ID3D12PipelineState* pipelineStateObject;
+	ID3D12Resource* vertexBuffer;
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
 	static const int frameBufferCount = 3; // Currently tripple buffering.
 	int frameIndex; // Current rtv
@@ -62,7 +68,6 @@ public:
 	int rtvDescriptorSize;
 
 	bool initializeWindow(HINSTANCE hInstance, int width, int height, bool fullscreen);
-	//LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	void WaitForGpu();
 };
 
