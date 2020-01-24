@@ -133,12 +133,35 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	scissorRect.right = width;
 	scissorRect.bottom = height;
 
-	// Create root signature
-	CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-	rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+	// Define descriptor(table) ranges
+	D3D12_DESCRIPTOR_RANGE dtRanges[1];
+	dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	dtRanges[0].NumDescriptors = 1;
+	dtRanges[0].BaseShaderRegister = 0;
+	dtRanges[0].RegisterSpace = 0;
+	dtRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	
+	// Create descriptor table
+	D3D12_ROOT_DESCRIPTOR_TABLE dt;
+	dt.NumDescriptorRanges = ARRAYSIZE(dtRanges);
+	dt.pDescriptorRanges = dtRanges;
+	
+	// Create root parameter
+	D3D12_ROOT_PARAMETER rootParam[1];
+	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParam[0].DescriptorTable = dt;
+	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
-	ID3DBlob* sBlob;	// For catching error messages..?
-	hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
+	// Create root signature
+	D3D12_ROOT_SIGNATURE_DESC rsDesc;
+	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+	rsDesc.NumParameters = ARRAYSIZE(rootParam);
+	rsDesc.pParameters = rootParam;
+	rsDesc.NumStaticSamplers = 0;
+	rsDesc.pStaticSamplers = nullptr;
+
+	ID3DBlob* sBlob;
+	hr = D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
 	if (FAILED(hr))
 		return false;
 
@@ -146,9 +169,36 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	if (FAILED(hr))
 		return false;
 
-	SafeRelease(&factory);
+	// Compile VertexShader
+	ID3DBlob* vertexBlob;
+	D3DCompileFromFile(
+		L"VertexShader.hlsl",
+		nullptr,
+		nullptr,
+		"main",
+		"vs_5_0",
+		0,
+		0,
+		&vertexBlob,
+		nullptr
+	);
 
-	return 0;
+	// Compile PixelShader
+	ID3DBlob* pixelBlob;
+	D3DCompileFromFile(
+		L"PixelShader.hlsl",
+		nullptr,
+		nullptr,
+		"main",
+		"ps_5_0",
+		0,
+		0,
+		&pixelBlob,
+		nullptr
+	);
+
+	SafeRelease(&factory);
+	return true;
 }
 
 bool Dx12Renderer::initializeWindow(HINSTANCE hInstance, int width, int height, bool fullscreen)
