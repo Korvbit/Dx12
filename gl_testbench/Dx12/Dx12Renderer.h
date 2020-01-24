@@ -42,6 +42,10 @@ public:
 
 	//=====================================================
 
+	HWND hwnd = NULL;
+	LPCTSTR WindowName = L"temp";
+	LPCTSTR WindowTitle = L"temp";
+
 	static const int frameBufferCount = 3; // Currently tripple buffering.
 	int frameIndex; // Current rtv
 
@@ -57,6 +61,9 @@ public:
 	ID3D12DescriptorHeap* rtvDescriptorHeap;
 	int rtvDescriptorSize;
 
+	bool initializeWindow(HINSTANCE hInstance, int width, int height, bool fullscreen);
+	//LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	void WaitForGpu();
 };
 
+LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
