@@ -7,6 +7,10 @@
 #include "d3dx12.h"
 #include "functions.h"
 
+struct Vertex {
+	float pos[3];
+};
+
 class Dx12Renderer :
 	public Renderer
 {
