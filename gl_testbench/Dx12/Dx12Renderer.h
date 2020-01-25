@@ -33,16 +33,15 @@ public:
 
 	int initialize(unsigned int width = 800, unsigned int height = 600);
 	void setWinTitle(const char* title) {};
-	void present() {};	// Render
+	void present() {};	// Swap buffers
 	int shutdown() { return -1;	};
 
-	void setClearColor(float, float, float, float) {};
+	void setClearColor(float r, float g, float b, float a);
 	void clearBuffer(unsigned int) {};
 	// can be partially overriden by a specific Technique.
 	void setRenderState(RenderState* ps) {};
-	// submit work (to render) to the renderer.
 	void submit(Mesh* mesh) {};
-	void frame() {};
+	void frame();
 
 	//=====================================================
 
@@ -58,7 +57,10 @@ public:
 
 	static const int frameBufferCount = 3; // Currently tripple buffering.
 	int frameIndex; // Current rtv
+	float clearColor[4];
 
+	ID3D12DescriptorHeap* descriptorHeap[frameBufferCount];
+	ID3D12Resource1* constantBufferResource[frameBufferCount];
 	ID3D12Device* device;
 	ID3D12CommandQueue* commandQueue;
 	ID3D12CommandAllocator* commandAllocator[frameBufferCount];

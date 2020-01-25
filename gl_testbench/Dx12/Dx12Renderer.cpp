@@ -287,9 +287,87 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	vertexBufferView.StrideInBytes = sizeof(Vertex);
 	vertexBufferView.SizeInBytes = sizeof(vList);
 
+	// Create constant buffer ================================================
+
+	for (int i = 0; i < frameBufferCount; i++)
+	{
+		D3D12_DESCRIPTOR_HEAP_DESC heapDescriptorDesc = {};
+		heapDescriptorDesc.NumDescriptors = 1;
+		heapDescriptorDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		heapDescriptorDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		device->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&descriptorHeap[i]));
+	}
+
+	UINT cbSizeAligned = (sizeof(ConstantBuffer) + 255) & ~255;
+
+	D3D12_HEAP_PROPERTIES heapProperties = {};
+	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
+	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+	heapProperties.CreationNodeMask = 1;
+	heapProperties.VisibleNodeMask = 1;
+	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+	D3D12_RESOURCE_DESC resourceDesc = {};
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	resourceDesc.Width = cbSizeAligned;
+	resourceDesc.Height = 1;
+	resourceDesc.DepthOrArraySize = 1;
+	resourceDesc.MipLevels = 1;
+	resourceDesc.SampleDesc.Count = 1;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	//Create a resource heap, descriptor heap, and pointer to cbv for each frame
+	for (int i = 0; i < frameBufferCount; i++)
+	{
+		device->CreateCommittedResource(
+			&heapProperties,
+			D3D12_HEAP_FLAG_NONE,
+			&resourceDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&constantBufferResource[i])
+		);
+
+		constantBufferResource[i]->SetName(L"cb heap");
+
+		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+		cbvDesc.BufferLocation = constantBufferResource[i]->GetGPUVirtualAddress();
+		cbvDesc.SizeInBytes = cbSizeAligned;
+		device->CreateConstantBufferView(&cbvDesc, descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
+	}
+	//================================================================================
 
 	SafeRelease(&factory);
 	return true;
+}
+
+void Dx12Renderer::setClearColor(float r, float g, float b, float a)
+{
+	clearColor[0] = r;
+	clearColor[1] = g;
+	clearColor[2] = b;
+	clearColor[3] = a;
+}
+
+void Dx12Renderer::frame()
+{
+	// Get the handle for the render target we're drawing to (the current back buffer)
+	D3D12_CPU_DESCRIPTOR_HANDLE cdh = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	cdh.ptr += rtvDescriptorSize * frameIndex;
+
+	// Kanske WaitForGPU?
+	commandAllocator[0]->Reset();
+	commandList->Reset(commandAllocator[0], pipelineStateObject);
+
+	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeap[frameIndex] };
+	commandList->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
+
+	commandList->SetGraphicsRootSignature(rootSignature);
+	
+	commandList->SetGraphicsRootDescriptorTable(0, descriptorHeap[frameIndex]->GetGPUDescriptorHandleForHeapStart());
+
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
 }
 
 bool Dx12Renderer::initializeWindow(HINSTANCE hInstance, int width, int height, bool fullscreen)
