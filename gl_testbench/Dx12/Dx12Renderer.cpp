@@ -9,6 +9,19 @@ Dx12Renderer::~Dx12Renderer()
 {
 }
 
+void Dx12Renderer::setResourceTransitionBarrier(ID3D12GraphicsCommandList * commandList, ID3D12Resource * resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter)
+{
+	D3D12_RESOURCE_BARRIER barrierDesc = {};
+
+	barrierDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrierDesc.Transition.pResource = resource;
+	barrierDesc.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	barrierDesc.Transition.StateBefore = StateBefore;
+	barrierDesc.Transition.StateAfter = StateAfter;
+
+	commandList->ResourceBarrier(1, &barrierDesc);
+}
+
 int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 {
 	// create the window
@@ -244,9 +257,9 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&pipelineStateObject));
 
 	Vertex vList[] = {
-		{ { 0.0f, 0.5f, 0.5f } },
-		{ { 0.5f, -0.5f, 0.5f } },
-		{ { -0.5f, -0.5f, 0.5f } },
+		{ { 0.0f, 0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f } },
+		{ { 0.5f, -0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f } },
+		{ { -0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } },
 	};
 
 	// Create vertex buffer resources
@@ -341,6 +354,11 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	return true;
 }
 
+void Dx12Renderer::setWinTitle(const char * title)
+{
+	SetWindowTextA(hwnd, title);
+}
+
 void Dx12Renderer::setClearColor(float r, float g, float b, float a)
 {
 	clearColor[0] = r;
@@ -351,11 +369,8 @@ void Dx12Renderer::setClearColor(float r, float g, float b, float a)
 
 void Dx12Renderer::frame()
 {
-	// Get the handle for the render target we're drawing to (the current back buffer)
-	D3D12_CPU_DESCRIPTOR_HANDLE cdh = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	cdh.ptr += rtvDescriptorSize * frameIndex;
+	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
-	// Kanske WaitForGPU?
 	commandAllocator[0]->Reset();
 	commandList->Reset(commandAllocator[0], pipelineStateObject);
 
@@ -368,6 +383,46 @@ void Dx12Renderer::frame()
 
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
+
+	setResourceTransitionBarrier(commandList,
+		renderTargets[frameIndex],
+		D3D12_RESOURCE_STATE_PRESENT,		// state before
+		D3D12_RESOURCE_STATE_RENDER_TARGET	// state after
+	);
+
+	// Get the handle for the render target we're drawing to (the current back buffer)
+	D3D12_CPU_DESCRIPTOR_HANDLE cdh = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	cdh.ptr += rtvDescriptorSize * frameIndex;
+	
+	// Record commands.
+	commandList->OMSetRenderTargets(1, &cdh, true, nullptr);
+
+	commandList->ClearRenderTargetView(cdh, clearColor, 0, nullptr);
+
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+
+	commandList->DrawInstanced(3, 1, 0, 0);
+
+	setResourceTransitionBarrier(commandList,
+		renderTargets[frameIndex],
+		D3D12_RESOURCE_STATE_RENDER_TARGET,	// state before
+		D3D12_RESOURCE_STATE_PRESENT		// state after
+	);
+
+	// Close the list to prepare it for execution.
+	commandList->Close();
+
+	// Execute the command list.
+	ID3D12CommandList* listsToExecute[] = { commandList };
+	commandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
+
+	// Present the frame.
+	DXGI_PRESENT_PARAMETERS pp = {};
+	swapChain->Present1(0, 0, &pp);
+
+	WaitForGpu(); //Wait for GPU to finish.
+				  //NOT BEST PRACTICE, only used as such for simplicity.
 }
 
 bool Dx12Renderer::initializeWindow(HINSTANCE hInstance, int width, int height, bool fullscreen)

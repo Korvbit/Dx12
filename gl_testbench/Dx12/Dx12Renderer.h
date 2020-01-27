@@ -9,6 +9,7 @@
 
 struct Vertex {
 	float pos[3];
+	float color[3];
 };
 
 class Dx12Renderer :
@@ -30,9 +31,12 @@ public:
 	std::string getShaderExtension() { return nullptr; };
 	ConstantBuffer* makeConstantBuffer(std::string NAME, unsigned int location) { return nullptr; };
 	Technique* makeTechnique(Material*, RenderState*) { return nullptr; };
+	void setResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList, ID3D12Resource* resource,
+		D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter);
+
 
 	int initialize(unsigned int width = 800, unsigned int height = 600);
-	void setWinTitle(const char* title) {};
+	void setWinTitle(const char* title);
 	void present() {};	// Swap buffers
 	int shutdown() { return -1;	};
 

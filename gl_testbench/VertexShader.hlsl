@@ -15,7 +15,7 @@ cbuffer CB : register(b0) {
 VSout VS_main(VSin input, uint index : SV_VertexID) {
 	VSout output = (VSout)0;
 	output.pos = float4(input.pos, 1.0f);
-	output.color = float4(R, G, B, A);
+	output.color = float4(input.color, 1.0f);
 
 	return output;
 }
