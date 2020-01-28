@@ -12,6 +12,10 @@ struct Vertex {
 	float color[3];
 };
 
+struct CBtranslate {
+	float translate[4];
+};
+
 class Dx12Renderer :
 	public Renderer
 {
@@ -62,9 +66,11 @@ public:
 	static const int frameBufferCount = 3; // Currently tripple buffering.
 	int frameIndex; // Current rtv
 	float clearColor[4];
+	int direction = 1;
 
 	ID3D12DescriptorHeap* descriptorHeap[frameBufferCount];
 	ID3D12Resource1* constantBufferResource[frameBufferCount];
+	CBtranslate translationBuffer;
 	ID3D12Device* device;
 	ID3D12CommandQueue* commandQueue;
 	ID3D12CommandAllocator* commandAllocator[frameBufferCount];
@@ -76,6 +82,10 @@ public:
 	ID3D12Resource* renderTargets[frameBufferCount];
 	ID3D12DescriptorHeap* rtvDescriptorHeap;
 	int rtvDescriptorSize;
+
+	ID3D12Resource* textureBuffer;
+	ID3D12DescriptorHeap* mainDescriptorHeap;
+	ID3D12Resource* textureBufferUploadHeap;
 
 	bool initializeWindow(HINSTANCE hInstance, int width, int height, bool fullscreen);
 	void WaitForGpu();

@@ -257,9 +257,9 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&pipelineStateObject));
 
 	Vertex vList[] = {
-		{ { 0.0f, 0.5f, 0.5f }, { 1.0f, 0.0f, 0.0f } },
-		{ { 0.5f, -0.5f, 0.5f }, { 0.0f, 1.0f, 0.0f } },
-		{ { -0.5f, -0.5f, 0.5f }, { 0.0f, 0.0f, 1.0f } },
+		{ { 0.0f, 0.5f, 0.5f }, { 1.0f, 1.0f, 0.0f } },
+		{ { 0.5f, -0.5f, 0.5f }, { 0.0f, 1.0f, 1.0f } },
+		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f, 1.0f } },
 	};
 
 	// Create vertex buffer resources
@@ -350,6 +350,12 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	}
 	//================================================================================
 
+	translationBuffer.translate[0] = 0;
+	translationBuffer.translate[1] = 0;
+	translationBuffer.translate[2] = 0;
+	translationBuffer.translate[3] = 0;
+
+
 	SafeRelease(&factory);
 	return true;
 }
@@ -370,6 +376,28 @@ void Dx12Renderer::setClearColor(float r, float g, float b, float a)
 void Dx12Renderer::frame()
 {
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
+	// Update =================================================
+
+	if (translationBuffer.translate[0] >= 0.5 || translationBuffer.translate[0] <= -0.5)
+	{
+		direction *= -1;
+	}
+
+	translationBuffer.translate[0] += 0.0001 * direction;
+
+	// Update GPU memory
+	void* mappedMem = nullptr;
+	D3D12_RANGE readRange = { 0, 0 };
+	if (SUCCEEDED(constantBufferResource[frameIndex]->Map(0, &readRange, &mappedMem)))
+	{
+		memcpy(mappedMem, &translationBuffer, sizeof(CBtranslate));
+
+		D3D12_RANGE writeRange = { 0, sizeof(CBtranslate) };
+		constantBufferResource[frameIndex]->Unmap(0, &writeRange);
+	}
+
+	// ========================================================
+
 
 	commandAllocator[0]->Reset();
 	commandList->Reset(commandAllocator[0], pipelineStateObject);

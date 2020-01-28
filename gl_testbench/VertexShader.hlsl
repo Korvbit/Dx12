@@ -9,12 +9,12 @@ struct VSout {
 };
 
 cbuffer CB : register(b0) {
-	float R, G, B, A;
+	float X, Y, Z, A;
 }
 
 VSout VS_main(VSin input, uint index : SV_VertexID) {
 	VSout output = (VSout)0;
-	output.pos = float4(input.pos, 1.0f);
+	output.pos = float4(input.pos, 1.0f) + float4(X, Y, Z, A);
 	output.color = float4(input.color, 1.0f);
 
 	return output;
