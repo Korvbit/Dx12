@@ -7,6 +7,30 @@ Dx12Renderer::Dx12Renderer()
 
 Dx12Renderer::~Dx12Renderer()
 {
+	rootSignature->Release();
+	pipelineStateObject->Release();
+
+	device->Release();
+	rtvDescriptorHeap->Release();
+	mainDescriptorHeap->Release();
+	dsDescriptorHeap->Release();
+	textureBufferUploadHeap->Release();
+	textureBuffer->Release();
+	vertexBuffer->Release();
+	depthStencilBuffer->Release();
+	commandQueue->Release();
+	commandList->Release();
+	swapChain->Release();
+
+	for (int i = 0; i < frameBufferCount; i++) {
+		renderTargets[i]->Release();
+		commandAllocator[i]->Release();
+		fence[i]->Release();
+		constantBufferResource[i]->Release();
+		descriptorHeap[i]->Release();
+	}
+		
+
 }
 
 void Dx12Renderer::setResourceTransitionBarrier(ID3D12GraphicsCommandList * commandList, ID3D12Resource * resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter)
@@ -132,6 +156,53 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		cdh.ptr += rtvDescriptorSize;
 	}
 
+	// Create depth stencil
+	#pragma region DEPTH STENCIL
+	D3D12_DEPTH_STENCILOP_DESC dsopDesc;
+	dsopDesc.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+	dsopDesc.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+	dsopDesc.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+	dsopDesc.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+
+	D3D12_DEPTH_STENCIL_DESC dsDesc;
+	dsDesc.DepthEnable = true;
+	dsDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+	dsDesc.StencilEnable = false;
+	dsDesc.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
+	dsDesc.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
+	dsDesc.FrontFace = dsopDesc;
+	dsDesc.BackFace = dsopDesc;
+
+	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
+	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsDescriptorHeap));
+
+	D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+	depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+	D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+	depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+	depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+	depthOptimizedClearValue.DepthStencil.Stencil = 0;
+
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&depthOptimizedClearValue,
+		IID_PPV_ARGS(&depthStencilBuffer)
+	);
+	dsDescriptorHeap->SetName(L"Depth/Stencil Resource Heap");
+
+	device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	#pragma endregion
+
 	// Initialize the viewport
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
@@ -253,6 +324,9 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 
 	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
 		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
+
+	// Specify depth testing
+	gpsd.DepthStencilState = dsDesc;
 
 	device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&pipelineStateObject));
 
@@ -421,11 +495,14 @@ void Dx12Renderer::frame()
 	// Get the handle for the render target we're drawing to (the current back buffer)
 	D3D12_CPU_DESCRIPTOR_HANDLE cdh = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	cdh.ptr += rtvDescriptorSize * frameIndex;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	
 	// Record commands.
-	commandList->OMSetRenderTargets(1, &cdh, true, nullptr);
+	commandList->OMSetRenderTargets(1, &cdh, true, &dsvHandle); // 3rd parameter true or false??
 
 	commandList->ClearRenderTargetView(cdh, clearColor, 0, nullptr);
+	commandList->ClearDepthStencilView(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
