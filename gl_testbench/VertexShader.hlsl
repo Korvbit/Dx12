@@ -1,11 +1,11 @@
 struct VSin {
-	float3 pos		: POSITION;
-	float3 color	: COLOR;
+	float3 pos			: POSITION;
+	float2 texCoords	: TEXCOORD;
 };
 
 struct VSout {
-	float4 pos		: SV_POSITION;
-	float3 color	: COLOR;
+	float4 pos			: SV_POSITION;
+	float2 texCoords	: TEXCOORD;
 };
 
 cbuffer CB : register(b0) {
@@ -15,7 +15,7 @@ cbuffer CB : register(b0) {
 VSout VS_main(VSin input, uint index : SV_VertexID) {
 	VSout output = (VSout)0;
 	output.pos = float4(input.pos, 1.0f) + float4(X, Y, Z, A);
-	output.color = float4(input.color, 1.0f);
+	output.texCoords = input.texCoords;
 
 	return output;
 }

@@ -24,3 +24,5 @@ public:
 	UINT bytesPerRow;
 };
 
+DXGI_FORMAT GetDXGIFormatFromWICFormat(WICPixelFormatGUID& wicFormatGUID);
+int GetDXGIFormatBitsPerPixel(DXGI_FORMAT& dxgiFormat);

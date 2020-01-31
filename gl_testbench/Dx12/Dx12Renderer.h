@@ -4,12 +4,13 @@
 #include <d3d12.h>
 #include <dxgi1_5.h>
 #include <D3Dcompiler.h>
+#include "Dx12Texture2D.h"
 #include "d3dx12.h"
 #include "functions.h"
 
 struct Vertex {
 	float pos[3];
-	float color[3];
+	float texCoords[2];
 };
 
 struct CBtranslate {
@@ -59,12 +60,13 @@ public:
 	UINT64 fenceValue[frameBufferCount];
 	HANDLE fenceEvent;
 	IDXGISwapChain3* swapChain;
+	UINT8* cbvGPUAddress[frameBufferCount];
 
 
 	Material* makeMaterial(const std::string& name) { return nullptr; };
 	Mesh* makeMesh() { return nullptr; };
 	VertexBuffer* makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage) { return nullptr; };
-	Texture2D* makeTexture2D() { return nullptr; };
+	Texture2D* makeTexture2D();
 	Sampler2D* makeSampler2D() { return nullptr; };
 	RenderState* makeRenderState() { return nullptr; };
 	std::string getShaderPath() { return nullptr; };

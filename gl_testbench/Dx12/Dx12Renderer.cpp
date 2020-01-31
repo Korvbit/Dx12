@@ -33,6 +33,11 @@ Dx12Renderer::~Dx12Renderer()
 
 }
 
+Texture2D * Dx12Renderer::makeTexture2D()
+{
+	return (Texture2D*)new Dx12Texture2D();
+}
+
 void Dx12Renderer::setResourceTransitionBarrier(ID3D12GraphicsCommandList * commandList, ID3D12Resource * resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter)
 {
 	D3D12_RESOURCE_BARRIER barrierDesc = {};
@@ -102,7 +107,6 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		nullptr,
 		IID_PPV_ARGS(&commandList));
 
-	commandList->Close();
 
 	// Create fences
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence[0]));
@@ -130,7 +134,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	scDesc.Flags = 0;
 	scDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 	
-	HRESULT hr = factory->CreateSwapChainForHwnd(
+	factory->CreateSwapChainForHwnd(
 		commandQueue,
 		hwnd,
 		&scDesc,
@@ -139,19 +143,22 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		reinterpret_cast<IDXGISwapChain1**>(&swapChain)
 	);
 
+	frameIndex = swapChain->GetCurrentBackBufferIndex();
+
+
 	// Create render target descriptors
 	D3D12_DESCRIPTOR_HEAP_DESC dhd = {};
 	dhd.NumDescriptors = frameBufferCount;
 	dhd.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 
-	hr = device->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&rtvDescriptorHeap));
+	device->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&rtvDescriptorHeap));
 
 	rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	D3D12_CPU_DESCRIPTOR_HANDLE cdh = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
 	// Create render targets
 	for (UINT i = 0; i < frameBufferCount; ++i) {
-		hr = swapChain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i]));
+		swapChain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i]));
 		device->CreateRenderTargetView(renderTargets[i], nullptr, cdh);
 		cdh.ptr += rtvDescriptorSize;
 	}
@@ -219,7 +226,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 
 	// Define descriptor(table) ranges
 	D3D12_DESCRIPTOR_RANGE dtRanges[1];
-	dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+	dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	dtRanges[0].NumDescriptors = 1;
 	dtRanges[0].BaseShaderRegister = 0;
 	dtRanges[0].RegisterSpace = 0;
@@ -229,29 +236,50 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	D3D12_ROOT_DESCRIPTOR_TABLE dt;
 	dt.NumDescriptorRanges = ARRAYSIZE(dtRanges);
 	dt.pDescriptorRanges = dtRanges;
+
+	// Create Constant Buffer root descriptor
+	D3D12_ROOT_DESCRIPTOR rootCBVDescriptor;
+	rootCBVDescriptor.RegisterSpace = 0;
+	rootCBVDescriptor.ShaderRegister = 0;
 	
 	// Create root parameter
-	D3D12_ROOT_PARAMETER rootParam[1];
+	D3D12_ROOT_PARAMETER rootParam[2];
 	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParam[0].DescriptorTable = dt;
-	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParam[1].Descriptor = rootCBVDescriptor;
+	rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+
+	// Create a static sampler
+	D3D12_STATIC_SAMPLER_DESC sampler = {};
+	sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+	sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	sampler.MipLODBias = 0;
+	sampler.MaxAnisotropy = 0;
+	sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+	sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+	sampler.MinLOD = 0.0f;
+	sampler.MaxLOD = D3D12_FLOAT32_MAX;
+	sampler.ShaderRegister = 0;
+	sampler.RegisterSpace = 0;
+	sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	// Create root signature
 	D3D12_ROOT_SIGNATURE_DESC rsDesc;
 	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	rsDesc.NumParameters = ARRAYSIZE(rootParam);
 	rsDesc.pParameters = rootParam;
-	rsDesc.NumStaticSamplers = 0;
-	rsDesc.pStaticSamplers = nullptr;
+	rsDesc.NumStaticSamplers = 1;
+	rsDesc.pStaticSamplers = &sampler;
 
 	ID3DBlob* sBlob;
-	hr = D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
-	if (FAILED(hr))
-		return false;
+	D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
 
-	hr = device->CreateRootSignature(0, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
-	if (FAILED(hr))
-		return false;
+	device->CreateRootSignature(0, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 
 	// Compile VertexShader
 	ID3DBlob* vertexBlob;
@@ -284,7 +312,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	// Input Layout
 	D3D12_INPUT_ELEMENT_DESC inputElementDesc[] = {
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 	};
 
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
@@ -331,9 +359,9 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&pipelineStateObject));
 
 	Vertex vList[] = {
-		{ { 0.0f, 0.5f, 0.5f }, { 1.0f, 1.0f, 0.0f } },
-		{ { 0.5f, -0.5f, 0.5f }, { 0.0f, 1.0f, 1.0f } },
-		{ { -0.5f, -0.5f, 0.5f }, { 1.0f, 0.0f, 1.0f } },
+		{ { 0.0f, 0.5f, 0.5f }, { 0.5f, -0.99f } },
+		{ { 0.5f, -0.5f, 0.5f }, { 1.49f, 1.1f } },
+		{ { -0.5f, -0.5f, 0.5f }, { -0.51, 1.1f } },
 	};
 
 	// Create vertex buffer resources
@@ -403,7 +431,67 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	//Create a resource heap, descriptor heap, and pointer to cbv for each frame
+	// TEMPORARY Create and load the texture
+	Dx12Texture2D* texture = new Dx12Texture2D();
+	texture->loadFromFile("../assets/textures/fatboy.png");
+
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), // a default heap
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&texture->resourceDesc, // the description of our texture
+		D3D12_RESOURCE_STATE_COPY_DEST, // We will copy the texture from the upload heap to here, so we start it out in a copy dest state
+		nullptr, // used for render targets and depth/stencil buffers
+		IID_PPV_ARGS(&textureBuffer));
+
+	textureBuffer->SetName(L"Texture Buffer Resource Heap");
+
+	UINT64 textureUploadBufferSize;
+	// this function gets the size an upload buffer needs to be to upload a texture to the gpu.
+	// each row must be 256 byte aligned except for the last row, which can just be the size in bytes of the row
+	// eg. textureUploadBufferSize = ((((width * numBytesPerPixel) + 255) & ~255) * (height - 1)) + (width * numBytesPerPixel);
+	//textureUploadBufferSize = (((imageBytesPerRow + 255) & ~255) * (textureDesc.Height - 1)) + imageBytesPerRow;
+	device->GetCopyableFootprints(&texture->resourceDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureUploadBufferSize);
+
+	// now we create an upload heap to upload our texture to the GPU
+	device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // upload heap
+		D3D12_HEAP_FLAG_NONE, // no flags
+		&CD3DX12_RESOURCE_DESC::Buffer(textureUploadBufferSize), // resource description for a buffer (storing the image data in this heap just to copy to the default heap)
+		D3D12_RESOURCE_STATE_GENERIC_READ, // We will copy the contents from this heap to the default heap above
+		nullptr,
+		IID_PPV_ARGS(&textureBufferUploadHeap));
+
+	textureBufferUploadHeap->SetName(L"Texture Buffer Upload Resource Heap");
+
+	// store vertex buffer in upload heap
+	D3D12_SUBRESOURCE_DATA textureData = {};
+	textureData.pData = texture->imageData; // pointer to our image data
+	textureData.RowPitch = texture->bytesPerRow; // size of all our triangle vertex data
+	textureData.SlicePitch = texture->bytesPerRow * texture->resourceDesc.Height; // also the size of our triangle vertex data
+
+	// Now we copy the upload buffer contents to the default heap
+	UpdateSubresources(commandList, textureBuffer, textureBufferUploadHeap, 0, 0, 1, &textureData);
+
+	// transition the texture default heap to a pixel shader resource (we will be sampling from this heap in the pixel shader to get the color of pixels)
+	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(textureBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+
+	// create the descriptor heap that will store our srv
+	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+	heapDesc.NumDescriptors = 1;
+	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&mainDescriptorHeap));
+
+	// now we create a shader resource view (descriptor that points to the texture and describes it)
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = texture->resourceDesc.Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+	device->CreateShaderResourceView(textureBuffer, &srvDesc, mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+
+
+	// Create a resource heap, descriptor heap, and pointer to cbv for each frame
 	for (int i = 0; i < frameBufferCount; i++)
 	{
 		device->CreateCommittedResource(
@@ -417,10 +505,15 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 
 		constantBufferResource[i]->SetName(L"cb heap");
 
-		D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+		CD3DX12_RANGE readRange(0, 0);
+		constantBufferResource[i]->Map(0, &readRange, reinterpret_cast<void**>(&cbvGPUAddress[i]));
+
+		memcpy(cbvGPUAddress[i], &translationBuffer, sizeof(translationBuffer));
+
+		/*D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
 		cbvDesc.BufferLocation = constantBufferResource[i]->GetGPUVirtualAddress();
 		cbvDesc.SizeInBytes = cbSizeAligned;
-		device->CreateConstantBufferView(&cbvDesc, descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
+		device->CreateConstantBufferView(&cbvDesc, descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());*/
 	}
 	//================================================================================
 
@@ -429,6 +522,14 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	translationBuffer.translate[2] = 0;
 	translationBuffer.translate[3] = 0;
 
+
+	commandList->Close();
+	ID3D12CommandList* ppCommandLists[] = { commandList };
+	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+	// increment the fence value now, otherwise the buffer might not be uploaded by the time we start drawing
+	fenceValue[frameIndex]++;
+	commandQueue->Signal(fence[frameIndex], fenceValue[frameIndex]);
 
 	SafeRelease(&factory);
 	return true;
@@ -460,7 +561,9 @@ void Dx12Renderer::frame()
 	translationBuffer.translate[0] += 0.0001 * direction;
 
 	// Update GPU memory
-	void* mappedMem = nullptr;
+	memcpy(cbvGPUAddress[frameIndex], &translationBuffer, sizeof(translationBuffer));
+
+	/*void* mappedMem = nullptr;
 	D3D12_RANGE readRange = { 0, 0 };
 	if (SUCCEEDED(constantBufferResource[frameIndex]->Map(0, &readRange, &mappedMem)))
 	{
@@ -468,7 +571,7 @@ void Dx12Renderer::frame()
 
 		D3D12_RANGE writeRange = { 0, sizeof(CBtranslate) };
 		constantBufferResource[frameIndex]->Unmap(0, &writeRange);
-	}
+	}*/
 
 	// ========================================================
 
@@ -506,7 +609,7 @@ void Dx12Renderer::frame()
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
-
+	commandList->SetGraphicsRootConstantBufferView(1, constantBufferResource[frameIndex]->GetGPUVirtualAddress());
 	commandList->DrawInstanced(3, 1, 0, 0);
 
 	setResourceTransitionBarrier(commandList,
