@@ -43,7 +43,6 @@ public:
 	ID3D12Device* device;
 	ID3D12DescriptorHeap* descriptorHeap[frameBufferCount];
 	ID3D12DescriptorHeap* rtvDescriptorHeap;
-	ID3D12DescriptorHeap* mainDescriptorHeap;
 	ID3D12DescriptorHeap* dsDescriptorHeap;
 	int rtvDescriptorSize;
 	ID3D12Resource* textureBufferUploadHeap;

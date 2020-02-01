@@ -12,7 +12,6 @@ Dx12Renderer::~Dx12Renderer()
 
 	device->Release();
 	rtvDescriptorHeap->Release();
-	mainDescriptorHeap->Release();
 	dsDescriptorHeap->Release();
 	textureBufferUploadHeap->Release();
 	textureBuffer->Release();
@@ -475,21 +474,16 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	// transition the texture default heap to a pixel shader resource (we will be sampling from this heap in the pixel shader to get the color of pixels)
 	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(textureBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
-	// create the descriptor heap that will store our srv
-	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-	heapDesc.NumDescriptors = 1;
-	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&mainDescriptorHeap));
-
 	// now we create a shader resource view (descriptor that points to the texture and describes it)
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = texture->resourceDesc.Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = 1;
-	device->CreateShaderResourceView(textureBuffer, &srvDesc, mainDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-
+	for (int i = 0; i < frameBufferCount; ++i)
+	{
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Format = texture->resourceDesc.Format;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = 1;
+		device->CreateShaderResourceView(textureBuffer, &srvDesc, descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
+	}
 
 	// Create a resource heap, descriptor heap, and pointer to cbv for each frame
 	for (int i = 0; i < frameBufferCount; i++)
@@ -509,11 +503,6 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		constantBufferResource[i]->Map(0, &readRange, reinterpret_cast<void**>(&cbvGPUAddress[i]));
 
 		memcpy(cbvGPUAddress[i], &translationBuffer, sizeof(translationBuffer));
-
-		/*D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-		cbvDesc.BufferLocation = constantBufferResource[i]->GetGPUVirtualAddress();
-		cbvDesc.SizeInBytes = cbSizeAligned;
-		device->CreateConstantBufferView(&cbvDesc, descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());*/
 	}
 	//================================================================================
 
