@@ -73,16 +73,15 @@ typedef union {
 
 
 void run() {
-
-	SDL_Event windowEvent;
-	while (true)
+	MSG msg = { 0 };
+	while (WM_QUIT != msg.message)
 	{
-		if (SDL_PollEvent(&windowEvent))
+		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
-			if (windowEvent.type == SDL_QUIT) break;
-			if (windowEvent.type == SDL_KEYUP && windowEvent.key.keysym.sym == SDLK_ESCAPE) break;
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
 		}
-		updateScene();
+		//updateScene();
 		renderScene();
 	}
 }
@@ -302,32 +301,10 @@ int main(int argc, char *argv[])
 {
 	renderer = Renderer::makeRenderer(Renderer::BACKEND::DX12);
 	renderer->initialize(800,600);
-	renderer->setClearColor(0.0, 0.1, 0.1, 1.0);
 	renderer->setWinTitle("Dx12");
-
-	SDL_Event windowEvent;
-	MSG msg = { 0 };
-
-	while (WM_QUIT != msg.message)
-	{
-		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-		else
-		{
-			renderer->frame();
-			updateDelta();
-			sprintf(gTitleBuff, "Dx12 - %3.0lf", gLastDelta);
-			renderer->setWinTitle(gTitleBuff);
-		}
-	}
-
-
-
+	renderer->setClearColor(0.0, 0.1, 0.1, 1.0);
 	//initialiseTestbench();
-	//run();
+	run();
 	//shutdown();
 	return 0;
 };
