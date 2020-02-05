@@ -37,6 +37,13 @@ Texture2D * Dx12Renderer::makeTexture2D()
 	return (Texture2D*)new Dx12Texture2D();
 }
 
+RenderState * Dx12Renderer::makeRenderState()
+{
+	RenderState* newRS = new Dx12RenderState();
+	newRS->setWireFrame(false);
+	return newRS;
+}
+
 Technique * Dx12Renderer::makeTechnique(Material* m, RenderState* r)
 {
 	Technique* t = new Technique(m, r);
@@ -364,9 +371,9 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&pipelineStateObject));
 
 	Vertex vList[] = {
-		{ { 0.0f, 0.5f, 0.5f }, { 0.5f, -0.99f } },
-		{ { 0.5f, -0.5f, 0.5f }, { 1.49f, 1.1f } },
-		{ { -0.5f, -0.5f, 0.5f }, { -0.51, 1.1f } },
+		{ { 0.0f,  0.05, 0.0f }, { 0.5f, -0.99f } },
+		{ { 0.05, -0.05, 0.0f }, { 1.49f, 1.1f } },
+		{ { -0.05, -0.05, 0.0f }, { -0.51, 1.1f } },
 	};
 
 	// Create vertex buffer resources
@@ -548,7 +555,7 @@ void Dx12Renderer::frame()
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
 	// Update =================================================
 
-	if (translationBuffer.translate[0] >= 0.5 || translationBuffer.translate[0] <= -0.5)
+	if (translationBuffer.translate[0] >= 0.9 || translationBuffer.translate[0] <= -0.95)
 	{
 		direction *= -1;
 	}

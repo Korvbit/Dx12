@@ -102,6 +102,9 @@
     <ClCompile Include="Dx12ConstantBuffer.cpp">
       <Filter>Source Files\Dx12</Filter>
     </ClCompile>
+    <ClCompile Include="Dx12RenderState.cpp">
+      <Filter>Source Files\Dx12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -123,9 +126,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Technique.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="IA.h">
@@ -192,6 +192,12 @@
       <Filter>Source Files\Dx12</Filter>
     </ClInclude>
     <ClInclude Include="Dx12ConstantBuffer.h">
+      <Filter>Source Files\Dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dx12RenderState.h">
       <Filter>Source Files\Dx12</Filter>
     </ClInclude>
   </ItemGroup>

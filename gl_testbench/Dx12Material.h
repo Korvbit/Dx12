@@ -15,7 +15,7 @@ class Dx12Material :
 	friend Dx12Renderer;
 
 public:
-	Dx12Material(const std::string& name);
+	Dx12Material(const std::string& name, ID3D12Device* rendererDevice);
 	~Dx12Material();
 
 	void setShader(const std::string& shaderFileName, ShaderType type);
@@ -48,4 +48,6 @@ public:
 
 private:
 	void compileShader(ShaderType type);
+
+	ID3D12Device* device;
 };
