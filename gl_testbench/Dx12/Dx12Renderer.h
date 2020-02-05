@@ -71,7 +71,7 @@ public:
 	std::string getShaderPath() { return nullptr; };
 	std::string getShaderExtension() { return nullptr; };
 	ConstantBuffer* makeConstantBuffer(std::string NAME, unsigned int location) { return nullptr; };
-	Technique* makeTechnique(Material*, RenderState*) { return nullptr; };
+	Technique* makeTechnique(Material*, RenderState*);
 	void setResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList, ID3D12Resource* resource,
 		D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter);
 

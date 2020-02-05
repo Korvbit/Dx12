@@ -37,6 +37,12 @@ Texture2D * Dx12Renderer::makeTexture2D()
 	return (Texture2D*)new Dx12Texture2D();
 }
 
+Technique * Dx12Renderer::makeTechnique(Material* m, RenderState* r)
+{
+	Technique* t = new Technique(m, r);
+	return t;
+}
+
 void Dx12Renderer::setResourceTransitionBarrier(ID3D12GraphicsCommandList * commandList, ID3D12Resource * resource, D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter)
 {
 	D3D12_RESOURCE_BARRIER barrierDesc = {};
