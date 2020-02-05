@@ -254,9 +254,9 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	// Create a static sampler
 	D3D12_STATIC_SAMPLER_DESC sampler = {};
 	sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-	sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-	sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+	sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	sampler.MipLODBias = 0;
 	sampler.MaxAnisotropy = 0;
 	sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
@@ -702,6 +702,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{
-	default: return DefWindowProc(hWnd, msg, wParam, lParam);
+
+	case WM_KEYDOWN:
+		if (wParam == VK_ESCAPE) {
+			if (MessageBox(0, L"Are you sure you want to exit?",
+				L"Really?", MB_YESNO | MB_ICONQUESTION) == IDYES)
+				DestroyWindow(hWnd);
+		}
+		return 0;
+
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
 	}
+	return DefWindowProc(hWnd,
+		msg,
+		wParam,
+		lParam);
 }
