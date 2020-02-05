@@ -96,6 +96,12 @@
     <ClCompile Include="Dx12\Dx12Texture2D.cpp">
       <Filter>Source Files\Dx12</Filter>
     </ClCompile>
+    <ClCompile Include="Dx12Material.cpp">
+      <Filter>Source Files\Dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="Dx12ConstantBuffer.cpp">
+      <Filter>Source Files\Dx12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -180,6 +186,12 @@
       <Filter>Source Files\Dx12</Filter>
     </ClInclude>
     <ClInclude Include="Dx12\Dx12Texture2D.h">
+      <Filter>Source Files\Dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="Dx12Material.h">
+      <Filter>Source Files\Dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="Dx12ConstantBuffer.h">
       <Filter>Source Files\Dx12</Filter>
     </ClInclude>
   </ItemGroup>
