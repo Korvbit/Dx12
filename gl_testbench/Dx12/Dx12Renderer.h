@@ -5,6 +5,7 @@
 #include <dxgi1_5.h>
 #include <D3Dcompiler.h>
 #include "Dx12Texture2D.h"
+#include "..//Dx12Material.h"
 #include "d3dx12.h"
 #include "functions.h"
 
@@ -61,15 +62,14 @@ public:
 	IDXGISwapChain3* swapChain;
 	UINT8* cbvGPUAddress[frameBufferCount];
 
-
-	Material* makeMaterial(const std::string& name) { return nullptr; };
+	Material* makeMaterial(const std::string& name) { return new Dx12Material(name); };
 	Mesh* makeMesh() { return nullptr; };
 	VertexBuffer* makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage) { return nullptr; };
 	Texture2D* makeTexture2D();
 	Sampler2D* makeSampler2D() { return nullptr; };
 	RenderState* makeRenderState() { return nullptr; };
-	std::string getShaderPath() { return nullptr; };
-	std::string getShaderExtension() { return nullptr; };
+	std::string getShaderPath() { return std::string(""); };
+	std::string getShaderExtension() { return std::string(".hlsl"); };
 	ConstantBuffer* makeConstantBuffer(std::string NAME, unsigned int location) { return nullptr; };
 	Technique* makeTechnique(Material*, RenderState*) { return nullptr; };
 	void setResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList, ID3D12Resource* resource,
