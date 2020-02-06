@@ -7,13 +7,17 @@
 class Dx12Sampler2D : public Sampler2D
 {
 public:
-	Dx12Sampler2D();
+	Dx12Sampler2D(ID3D12Device* rendererDevice);
 	~Dx12Sampler2D();
 	void setMagFilter(FILTER filter);
 	void setMinFilter(FILTER filter);
 	void setWrap(WRAPPING s, WRAPPING t);
 
+	ID3D12DescriptorHeap* getDescriptorHeap();
+
 private:
 	D3D12_SAMPLER_DESC samplerDesc;
+	ID3D12Device* device;
+	ID3D12DescriptorHeap* descriptorHeap;
 };
 

@@ -2,6 +2,7 @@
 
 #include "../Texture2D.h"
 #include <d3d12.h>
+#include "d3dx12.h"
 #include <dxgi1_5.h>
 #include <D3Dcompiler.h>
 #include "d3dx12.h"
@@ -13,7 +14,7 @@ class Dx12Texture2D :
 	public Texture2D
 {
 public:
-	Dx12Texture2D();
+	Dx12Texture2D(ID3D12Device* rendererDevice, ID3D12GraphicsCommandList* rendererCommandList, ID3D12CommandQueue* rendererCommandQueue);
 	~Dx12Texture2D();
 
 	int loadFromFile(std::string filename);
@@ -22,6 +23,14 @@ public:
 	BYTE* imageData;
 	D3D12_RESOURCE_DESC resourceDesc;
 	UINT bytesPerRow;
+
+private:
+	ID3D12Device* device;
+	ID3D12GraphicsCommandList* commandList;
+	ID3D12CommandQueue* commandQueue;
+	ID3D12Resource* textureBuffer;
+	ID3D12Resource* textureBufferUploadHeap;
+	ID3D12DescriptorHeap* descriptorHeap;
 };
 
 DXGI_FORMAT GetDXGIFormatFromWICFormat(WICPixelFormatGUID& wicFormatGUID);

@@ -44,12 +44,12 @@ VertexBuffer * Dx12Renderer::makeVertexBuffer(size_t size, VertexBuffer::DATA_US
 
 Texture2D * Dx12Renderer::makeTexture2D()
 {
-	return (Texture2D*)new Dx12Texture2D();
+	return (Texture2D*)new Dx12Texture2D(device, commandList, commandQueue);
 }
 
 Sampler2D * Dx12Renderer::makeSampler2D()
 {
-	return new Dx12Sampler2D();
+	return new Dx12Sampler2D(device);
 }
 
 RenderState * Dx12Renderer::makeRenderState()
@@ -488,7 +488,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
 	// TEMPORARY Create and load the texture
-	Dx12Texture2D* texture = new Dx12Texture2D();
+	Dx12Texture2D* texture = new Dx12Texture2D(device, commandList, commandQueue);
 	texture->loadFromFile("../assets/textures/fatboy.png");
 
 	device->CreateCommittedResource(
