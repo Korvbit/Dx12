@@ -157,6 +157,7 @@
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="Dx12ConstantBuffer.cpp" />
     <ClCompile Include="Dx12Material.cpp" />
+    <ClCompile Include="Dx12Mesh.cpp" />
     <ClCompile Include="Dx12RenderState.cpp" />
     <ClCompile Include="Dx12Sampler2D.cpp" />
     <ClCompile Include="Dx12VertexBuffer.cpp" />
@@ -190,6 +191,7 @@
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="Dx12ConstantBuffer.h" />
     <ClInclude Include="Dx12Material.h" />
+    <ClInclude Include="Dx12Mesh.h" />
     <ClInclude Include="Dx12RenderState.h" />
     <ClInclude Include="Dx12Sampler2D.h" />
     <ClInclude Include="Dx12VertexBuffer.h" />

@@ -7,6 +7,11 @@
 #include "IA.h"
 #include "ConstantBuffer.h"
 
+typedef union {
+	struct { float x, y, z, w; };
+	struct { float r, g, b, a; };
+} float4;
+
 class Dx12ConstantBuffer : public ConstantBuffer
 {
 public:

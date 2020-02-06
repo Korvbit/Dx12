@@ -12,6 +12,10 @@ Dx12ConstantBuffer::Dx12ConstantBuffer(std::string NAME, unsigned int location, 
 	{
 		cbSizeAligned = (sizeof(4 * sizeof(float)) + 255) & ~255;
 	}
+	else if (name == std::string(TRANSLATION_NAME))
+	{
+		cbSizeAligned = (sizeof(float4) + 255) & ~255;
+	}
 
 	D3D12_HEAP_PROPERTIES heapProperties = {};
 	heapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;

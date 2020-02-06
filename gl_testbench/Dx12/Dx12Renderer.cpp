@@ -32,6 +32,11 @@ Dx12Renderer::~Dx12Renderer()
 
 }
 
+Mesh * Dx12Renderer::makeMesh()
+{
+	return new Dx12Mesh();
+}
+
 VertexBuffer * Dx12Renderer::makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage)
 {
 	return new Dx12VertexBuffer(size, usage, device);
@@ -52,6 +57,11 @@ RenderState * Dx12Renderer::makeRenderState()
 	RenderState* newRS = new Dx12RenderState(device);
 	newRS->setWireFrame(false);
 	return newRS;
+}
+
+ConstantBuffer * Dx12Renderer::makeConstantBuffer(std::string NAME, unsigned int location)
+{
+	return new Dx12ConstantBuffer(NAME, location, device);
 }
 
 Technique * Dx12Renderer::makeTechnique(Material* m, RenderState* r)

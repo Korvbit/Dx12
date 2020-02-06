@@ -9,6 +9,7 @@
 #include "..//Dx12RenderState.h"
 #include "..//Dx12Sampler2D.h"
 #include "..//Dx12VertexBuffer.h"
+#include "..//Dx12Mesh.h"
 #include "d3dx12.h"
 #include "functions.h"
 
@@ -66,14 +67,14 @@ public:
 	UINT8* cbvGPUAddress[frameBufferCount];
 
 	Material* makeMaterial(const std::string& name) { return new Dx12Material(name, device); };
-	Mesh* makeMesh() { return nullptr; };
+	Mesh* makeMesh();
 	VertexBuffer* makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage);
 	Texture2D* makeTexture2D();
 	Sampler2D* makeSampler2D();
 	RenderState* makeRenderState();
 	std::string getShaderPath() { return std::string(""); };
 	std::string getShaderExtension() { return std::string(".hlsl"); };
-	ConstantBuffer* makeConstantBuffer(std::string NAME, unsigned int location) { return nullptr; };
+	ConstantBuffer* makeConstantBuffer(std::string NAME, unsigned int location);
 	Technique* makeTechnique(Material*, RenderState*);
 	void setResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList, ID3D12Resource* resource,
 		D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter);
