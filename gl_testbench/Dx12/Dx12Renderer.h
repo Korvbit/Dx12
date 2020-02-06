@@ -7,6 +7,8 @@
 #include "Dx12Texture2D.h"
 #include "..//Dx12Material.h"
 #include "..//Dx12RenderState.h"
+#include "..//Dx12Sampler2D.h"
+#include "..//Dx12VertexBuffer.h"
 #include "d3dx12.h"
 #include "functions.h"
 
@@ -65,9 +67,9 @@ public:
 
 	Material* makeMaterial(const std::string& name) { return new Dx12Material(name, device); };
 	Mesh* makeMesh() { return nullptr; };
-	VertexBuffer* makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage) { return nullptr; };
+	VertexBuffer* makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage);
 	Texture2D* makeTexture2D();
-	Sampler2D* makeSampler2D() { return nullptr; };
+	Sampler2D* makeSampler2D();
 	RenderState* makeRenderState();
 	std::string getShaderPath() { return std::string(""); };
 	std::string getShaderExtension() { return std::string(".hlsl"); };

@@ -32,21 +32,34 @@ Dx12Renderer::~Dx12Renderer()
 
 }
 
+VertexBuffer * Dx12Renderer::makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage)
+{
+	return new Dx12VertexBuffer(size, usage, device);
+}
+
 Texture2D * Dx12Renderer::makeTexture2D()
 {
 	return (Texture2D*)new Dx12Texture2D();
 }
 
+Sampler2D * Dx12Renderer::makeSampler2D()
+{
+	return new Dx12Sampler2D();
+}
+
 RenderState * Dx12Renderer::makeRenderState()
 {
-	RenderState* newRS = new Dx12RenderState();
+	RenderState* newRS = new Dx12RenderState(device);
 	newRS->setWireFrame(false);
 	return newRS;
 }
 
 Technique * Dx12Renderer::makeTechnique(Material* m, RenderState* r)
 {
+	((Dx12RenderState*)r)->CreatePipelineState(((Dx12Material*)m)->vertexBlob, ((Dx12Material*)m)->pixelBlob, rootSignature);
+
 	Technique* t = new Technique(m, r);
+
 	return t;
 }
 
@@ -243,11 +256,22 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	dtRanges[0].BaseShaderRegister = 0;
 	dtRanges[0].RegisterSpace = 0;
 	dtRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-	
+
+	D3D12_DESCRIPTOR_RANGE samplerRanges[1];
+	samplerRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+	samplerRanges[0].NumDescriptors = 1;
+	samplerRanges[0].BaseShaderRegister = 0;
+	samplerRanges[0].RegisterSpace = 0;
+	samplerRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
 	// Create descriptor table
 	D3D12_ROOT_DESCRIPTOR_TABLE dt;
 	dt.NumDescriptorRanges = ARRAYSIZE(dtRanges);
 	dt.pDescriptorRanges = dtRanges;
+
+	D3D12_ROOT_DESCRIPTOR_TABLE dtSampler;
+	dtSampler.NumDescriptorRanges = ARRAYSIZE(samplerRanges);
+	dtSampler.pDescriptorRanges = samplerRanges;
 
 	// Create Constant Buffer root descriptor
 	D3D12_ROOT_DESCRIPTOR rootCBVDescriptor;
@@ -255,17 +279,27 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	rootCBVDescriptor.ShaderRegister = 0;
 	
 	// Create root parameter
-	D3D12_ROOT_PARAMETER rootParam[2];
+	D3D12_ROOT_PARAMETER rootParam[4];
 	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	rootParam[0].DescriptorTable = dt;
 	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParam[1].Descriptor = rootCBVDescriptor;
-	rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParam[1].DescriptorTable = dtSampler;
+	rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	rootParam[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParam[2].Descriptor = rootCBVDescriptor;
+	rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+
+	rootCBVDescriptor.RegisterSpace = 1;
+
+	rootParam[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParam[3].Descriptor = rootCBVDescriptor;
+	rootParam[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	// Create a static sampler
-	D3D12_STATIC_SAMPLER_DESC sampler = {};
+	/*D3D12_STATIC_SAMPLER_DESC sampler = {};
 	sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
 	sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -278,97 +312,97 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	sampler.MaxLOD = D3D12_FLOAT32_MAX;
 	sampler.ShaderRegister = 0;
 	sampler.RegisterSpace = 0;
-	sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;*/
 
 	// Create root signature
 	D3D12_ROOT_SIGNATURE_DESC rsDesc;
 	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 	rsDesc.NumParameters = ARRAYSIZE(rootParam);
 	rsDesc.pParameters = rootParam;
-	rsDesc.NumStaticSamplers = 1;
-	rsDesc.pStaticSamplers = &sampler;
+	rsDesc.NumStaticSamplers = 0;
+	rsDesc.pStaticSamplers = nullptr;
 
 	ID3DBlob* sBlob;
 	D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
 
 	device->CreateRootSignature(0, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 
-	// Compile VertexShader
-	ID3DBlob* vertexBlob;
-	D3DCompileFromFile(
-		L"VertexShader.hlsl",
-		nullptr,
-		nullptr,
-		"VS_main",
-		"vs_5_0",
-		0,
-		0,
-		&vertexBlob,
-		nullptr
-	);
+	//// Compile VertexShader
+	//ID3DBlob* vertexBlob;
+	//D3DCompileFromFile(
+	//	L"VertexShader.hlsl",
+	//	nullptr,
+	//	nullptr,
+	//	"VS_main",
+	//	"vs_5_0",
+	//	0,
+	//	0,
+	//	&vertexBlob,
+	//	nullptr
+	//);
 
-	// Compile PixelShader
-	ID3DBlob* pixelBlob;
-	D3DCompileFromFile(
-		L"PixelShader.hlsl",
-		nullptr,
-		nullptr,
-		"PS_main",
-		"ps_5_0",
-		0,
-		0,
-		&pixelBlob,
-		nullptr
-	);
+	//// Compile PixelShader
+	//ID3DBlob* pixelBlob;
+	//D3DCompileFromFile(
+	//	L"PixelShader.hlsl",
+	//	nullptr,
+	//	nullptr,
+	//	"PS_main",
+	//	"ps_5_0",
+	//	0,
+	//	0,
+	//	&pixelBlob,
+	//	nullptr
+	//);
 
 	// Input Layout
-	D3D12_INPUT_ELEMENT_DESC inputElementDesc[] = {
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
-	};
+	//D3D12_INPUT_ELEMENT_DESC inputElementDesc[] = {
+	//	{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+	//	{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+	//};
 
-	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
-	inputLayoutDesc.pInputElementDescs = inputElementDesc;
-	inputLayoutDesc.NumElements = ARRAYSIZE(inputElementDesc);
+	//D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
+	//inputLayoutDesc.pInputElementDescs = inputElementDesc;
+	//inputLayoutDesc.NumElements = ARRAYSIZE(inputElementDesc);
 
-	// Create a pipeline state
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsd = {};
+	//// Create a pipeline state
+	//D3D12_GRAPHICS_PIPELINE_STATE_DESC gpsd = {};
 
-	// Specify pipeline stages
-	gpsd.pRootSignature = rootSignature;
-	gpsd.InputLayout = inputLayoutDesc;
-	gpsd.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	gpsd.VS.pShaderBytecode = reinterpret_cast<void*>(vertexBlob->GetBufferPointer());
-	gpsd.VS.BytecodeLength = vertexBlob->GetBufferSize();
-	gpsd.PS.pShaderBytecode = reinterpret_cast<void*>(pixelBlob->GetBufferPointer());
-	gpsd.PS.BytecodeLength = pixelBlob->GetBufferSize();
+	//// Specify pipeline stages
+	//gpsd.pRootSignature = rootSignature;
+	//gpsd.InputLayout = inputLayoutDesc;
+	//gpsd.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	//gpsd.VS.pShaderBytecode = reinterpret_cast<void*>(vertexBlob->GetBufferPointer());
+	//gpsd.VS.BytecodeLength = vertexBlob->GetBufferSize();
+	//gpsd.PS.pShaderBytecode = reinterpret_cast<void*>(pixelBlob->GetBufferPointer());
+	//gpsd.PS.BytecodeLength = pixelBlob->GetBufferSize();
 
-	// Specify render target and depthstencil usage
-	gpsd.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	gpsd.NumRenderTargets = 1;
+	//// Specify render target and depthstencil usage
+	//gpsd.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	//gpsd.NumRenderTargets = 1;
 
-	gpsd.SampleDesc.Count = 1;
-	gpsd.SampleMask = UINT_MAX;
+	//gpsd.SampleDesc.Count = 1;
+	//gpsd.SampleMask = UINT_MAX;
 
-	// Specify rasterizer behaviour
-	gpsd.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-	gpsd.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	//// Specify rasterizer behaviour
+	//gpsd.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	//gpsd.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 
-	// Specify blend descriptions
-	D3D12_RENDER_TARGET_BLEND_DESC defaultRTdesc = {
-		false, false,
-		D3D12_BLEND_ONE,D3D12_BLEND_ZERO,D3D12_BLEND_OP_ADD,
-		D3D12_BLEND_ONE,D3D12_BLEND_ZERO,D3D12_BLEND_OP_ADD,
-		D3D12_LOGIC_OP_NOOP, D3D12_COLOR_WRITE_ENABLE_ALL
-	};
+	//// Specify blend descriptions
+	//D3D12_RENDER_TARGET_BLEND_DESC defaultRTdesc = {
+	//	false, false,
+	//	D3D12_BLEND_ONE,D3D12_BLEND_ZERO,D3D12_BLEND_OP_ADD,
+	//	D3D12_BLEND_ONE,D3D12_BLEND_ZERO,D3D12_BLEND_OP_ADD,
+	//	D3D12_LOGIC_OP_NOOP, D3D12_COLOR_WRITE_ENABLE_ALL
+	//};
 
-	for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
-		gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
+	//for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; i++)
+	//	gpsd.BlendState.RenderTarget[i] = defaultRTdesc;
 
-	// Specify depth testing
-	gpsd.DepthStencilState = dsDesc;
+	//// Specify depth testing
+	//gpsd.DepthStencilState = dsDesc;
 
-	device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&pipelineStateObject));
+	//device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&pipelineStateObject));
 
 	Vertex vList[] = {
 		{ { 0.0f,  0.05, 0.0f }, { 0.5f, -0.99f } },

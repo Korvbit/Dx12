@@ -1,5 +1,6 @@
 struct VSin {
 	float3 pos			: POSITION;
+	float3 nor			: NORMAL;
 	float2 texCoords	: TEXCOORD;
 };
 

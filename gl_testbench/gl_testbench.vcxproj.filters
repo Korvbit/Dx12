@@ -105,6 +105,12 @@
     <ClCompile Include="Dx12RenderState.cpp">
       <Filter>Source Files\Dx12</Filter>
     </ClCompile>
+    <ClCompile Include="Dx12Sampler2D.cpp">
+      <Filter>Source Files\Dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="Dx12VertexBuffer.cpp">
+      <Filter>Source Files\Dx12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -198,6 +204,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Dx12RenderState.h">
+      <Filter>Source Files\Dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="Dx12Sampler2D.h">
+      <Filter>Source Files\Dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="Dx12VertexBuffer.h">
       <Filter>Source Files\Dx12</Filter>
     </ClInclude>
   </ItemGroup>
