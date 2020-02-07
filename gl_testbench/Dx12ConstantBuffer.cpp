@@ -52,7 +52,7 @@ Dx12ConstantBuffer::~Dx12ConstantBuffer()
 
 void Dx12ConstantBuffer::setData(const void * data, size_t size, Material * m, unsigned int location)
 {
-	memcpy(mappedBuffer, &data, size);
+	memcpy(mappedBuffer, data, size);
 }
 
 void Dx12ConstantBuffer::bind(Material *)
