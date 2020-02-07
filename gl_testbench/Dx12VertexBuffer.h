@@ -13,6 +13,7 @@ public:
 	void bind(size_t offset, size_t size, unsigned int location);
 	void unbind();
 	size_t getSize();
+	D3D12_VERTEX_BUFFER_VIEW* getView();
 
 private:
 	ID3D12Device* device;

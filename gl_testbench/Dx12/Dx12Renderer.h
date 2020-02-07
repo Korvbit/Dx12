@@ -65,6 +65,8 @@ public:
 	HANDLE fenceEvent;
 	IDXGISwapChain3* swapChain;
 	UINT8* cbvGPUAddress[frameBufferCount];
+	std::unordered_map<Technique*, std::vector<Mesh*>> drawList;
+	unsigned int clearFlags;
 
 	Material* makeMaterial(const std::string& name) { return new Dx12Material(name, device); };
 	Mesh* makeMesh();
@@ -81,13 +83,13 @@ public:
 
 	int initialize(unsigned int width = 800, unsigned int height = 600);
 	void setWinTitle(const char* title);
-	void present() {};	// Swap buffers
+	void present();	// Swap buffers
 	int shutdown() { return -1;	};
 
 	void setClearColor(float r, float g, float b, float a);
-	void clearBuffer(unsigned int) {};
+	void clearBuffer(unsigned int flags);
 	void setRenderState(RenderState* ps) {};
-	void submit(Mesh* mesh) {};
+	void submit(Mesh* mesh);
 	void frame();
 
 	bool initializeWindow(HINSTANCE hInstance, int width, int height, bool fullscreen);

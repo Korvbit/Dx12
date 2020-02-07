@@ -130,9 +130,8 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	device->CreateCommandQueue(&cqd, IID_PPV_ARGS(&commandQueue));
 
 	// Create command allocators
-	//for (int i = 0; i < frameBufferCount; ++i)
-	//	device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator[i]));
-	device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator[0]));
+	for (int i = 0; i < frameBufferCount; ++i)
+		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator[i]));
 
 	// Create command lists
 	device->CreateCommandList(
@@ -302,7 +301,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	rootParam[2].Descriptor = rootCBVDescriptor;
 	rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
-	rootCBVDescriptor.RegisterSpace = 1;
+	rootCBVDescriptor.ShaderRegister = 1;
 
 	rootParam[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	rootParam[3].Descriptor = rootCBVDescriptor;
@@ -414,53 +413,53 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 
 	//device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&pipelineStateObject));
 
-	Vertex vList[] = {
-		{ { 0.0f,  0.05, 0.0f }, { 0.5f, -0.99f } },
-		{ { 0.05, -0.05, 0.0f }, { 1.49f, 1.1f } },
-		{ { -0.05, -0.05, 0.0f }, { -0.51, 1.1f } },
-	};
+	//Vertex vList[] = {
+	//	{ { 0.0f,  0.05, 0.0f }, { 0.5f, -0.99f } },
+	//	{ { 0.05, -0.05, 0.0f }, { 1.49f, 1.1f } },
+	//	{ { -0.05, -0.05, 0.0f }, { -0.51, 1.1f } },
+	//};
 
-	// Create vertex buffer resources
-	D3D12_HEAP_PROPERTIES hp = {};
-	hp.Type = D3D12_HEAP_TYPE_UPLOAD;
-	hp.CreationNodeMask = 1;
-	hp.VisibleNodeMask = 1;
+	//// Create vertex buffer resources
+	//D3D12_HEAP_PROPERTIES hp = {};
+	//hp.Type = D3D12_HEAP_TYPE_UPLOAD;
+	//hp.CreationNodeMask = 1;
+	//hp.VisibleNodeMask = 1;
 
-	D3D12_RESOURCE_DESC rd = {};
-	rd.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	rd.Width = sizeof(vList);
-	rd.Height = 1;
-	rd.DepthOrArraySize = 1;
-	rd.MipLevels = 1;
-	rd.SampleDesc.Count = 1;
-	rd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	//D3D12_RESOURCE_DESC rd = {};
+	//rd.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	//rd.Width = sizeof(vList);
+	//rd.Height = 1;
+	//rd.DepthOrArraySize = 1;
+	//rd.MipLevels = 1;
+	//rd.SampleDesc.Count = 1;
+	//rd.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	// Creates a heap of adequate size and a corresponding resource mapped to the heap
-	device->CreateCommittedResource(
-		&hp,
-		D3D12_HEAP_FLAG_NONE,
-		&rd,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&vertexBuffer)
-	);
+	//// Creates a heap of adequate size and a corresponding resource mapped to the heap
+	//device->CreateCommittedResource(
+	//	&hp,
+	//	D3D12_HEAP_FLAG_NONE,
+	//	&rd,
+	//	D3D12_RESOURCE_STATE_GENERIC_READ,
+	//	nullptr,
+	//	IID_PPV_ARGS(&vertexBuffer)
+	//);
 
-	vertexBuffer->SetName(L"vs heap");
+	//vertexBuffer->SetName(L"vs heap");
 
-	// Copy the data into the buffer
-	void* dataBegin = nullptr;
-	D3D12_RANGE range = { 0,0 };
-	vertexBuffer->Map(0, &range, &dataBegin);
-	memcpy(dataBegin, vList, sizeof(vList));
-	vertexBuffer->Unmap(0, nullptr);
+	//// Copy the data into the buffer
+	//void* dataBegin = nullptr;
+	//D3D12_RANGE range = { 0,0 };
+	//vertexBuffer->Map(0, &range, &dataBegin);
+	//memcpy(dataBegin, vList, sizeof(vList));
+	//vertexBuffer->Unmap(0, nullptr);
 
-	vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-	vertexBufferView.StrideInBytes = sizeof(Vertex);
-	vertexBufferView.SizeInBytes = sizeof(vList);
+	//vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+	//vertexBufferView.StrideInBytes = sizeof(Vertex);
+	//vertexBufferView.SizeInBytes = sizeof(vList);
 
 	// Create constant buffer ================================================
 
-	for (int i = 0; i < frameBufferCount; i++)
+	/*for (int i = 0; i < frameBufferCount; i++)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC heapDescriptorDesc = {};
 		heapDescriptorDesc.NumDescriptors = 1;
@@ -485,65 +484,65 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	resourceDesc.DepthOrArraySize = 1;
 	resourceDesc.MipLevels = 1;
 	resourceDesc.SampleDesc.Count = 1;
-	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;*/
 
 	// TEMPORARY Create and load the texture
-	Dx12Texture2D* texture = new Dx12Texture2D(device, commandList, commandQueue);
-	texture->loadFromFile("../assets/textures/fatboy.png");
+	//Dx12Texture2D* texture = new Dx12Texture2D(device, commandList, commandQueue);
+	//texture->loadFromFile("../assets/textures/fatboy.png");
 
-	device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), // a default heap
-		D3D12_HEAP_FLAG_NONE, // no flags
-		&texture->resourceDesc, // the description of our texture
-		D3D12_RESOURCE_STATE_COPY_DEST, // We will copy the texture from the upload heap to here, so we start it out in a copy dest state
-		nullptr, // used for render targets and depth/stencil buffers
-		IID_PPV_ARGS(&textureBuffer));
+	//device->CreateCommittedResource(
+	//	&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), // a default heap
+	//	D3D12_HEAP_FLAG_NONE, // no flags
+	//	&texture->resourceDesc, // the description of our texture
+	//	D3D12_RESOURCE_STATE_COPY_DEST, // We will copy the texture from the upload heap to here, so we start it out in a copy dest state
+	//	nullptr, // used for render targets and depth/stencil buffers
+	//	IID_PPV_ARGS(&textureBuffer));
 
-	textureBuffer->SetName(L"Texture Buffer Resource Heap");
+	//textureBuffer->SetName(L"Texture Buffer Resource Heap");
 
-	UINT64 textureUploadBufferSize;
-	// this function gets the size an upload buffer needs to be to upload a texture to the gpu.
-	// each row must be 256 byte aligned except for the last row, which can just be the size in bytes of the row
-	// eg. textureUploadBufferSize = ((((width * numBytesPerPixel) + 255) & ~255) * (height - 1)) + (width * numBytesPerPixel);
-	//textureUploadBufferSize = (((imageBytesPerRow + 255) & ~255) * (textureDesc.Height - 1)) + imageBytesPerRow;
-	device->GetCopyableFootprints(&texture->resourceDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureUploadBufferSize);
+	//UINT64 textureUploadBufferSize;
+	//// this function gets the size an upload buffer needs to be to upload a texture to the gpu.
+	//// each row must be 256 byte aligned except for the last row, which can just be the size in bytes of the row
+	//// eg. textureUploadBufferSize = ((((width * numBytesPerPixel) + 255) & ~255) * (height - 1)) + (width * numBytesPerPixel);
+	////textureUploadBufferSize = (((imageBytesPerRow + 255) & ~255) * (textureDesc.Height - 1)) + imageBytesPerRow;
+	//device->GetCopyableFootprints(&texture->resourceDesc, 0, 1, 0, nullptr, nullptr, nullptr, &textureUploadBufferSize);
 
-	// now we create an upload heap to upload our texture to the GPU
-	device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // upload heap
-		D3D12_HEAP_FLAG_NONE, // no flags
-		&CD3DX12_RESOURCE_DESC::Buffer(textureUploadBufferSize), // resource description for a buffer (storing the image data in this heap just to copy to the default heap)
-		D3D12_RESOURCE_STATE_GENERIC_READ, // We will copy the contents from this heap to the default heap above
-		nullptr,
-		IID_PPV_ARGS(&textureBufferUploadHeap));
+	//// now we create an upload heap to upload our texture to the GPU
+	//device->CreateCommittedResource(
+	//	&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), // upload heap
+	//	D3D12_HEAP_FLAG_NONE, // no flags
+	//	&CD3DX12_RESOURCE_DESC::Buffer(textureUploadBufferSize), // resource description for a buffer (storing the image data in this heap just to copy to the default heap)
+	//	D3D12_RESOURCE_STATE_GENERIC_READ, // We will copy the contents from this heap to the default heap above
+	//	nullptr,
+	//	IID_PPV_ARGS(&textureBufferUploadHeap));
 
-	textureBufferUploadHeap->SetName(L"Texture Buffer Upload Resource Heap");
+	//textureBufferUploadHeap->SetName(L"Texture Buffer Upload Resource Heap");
 
-	// store vertex buffer in upload heap
-	D3D12_SUBRESOURCE_DATA textureData = {};
-	textureData.pData = texture->imageData; // pointer to our image data
-	textureData.RowPitch = texture->bytesPerRow; // size of all our triangle vertex data
-	textureData.SlicePitch = texture->bytesPerRow * texture->resourceDesc.Height; // also the size of our triangle vertex data
+	//// store vertex buffer in upload heap
+	//D3D12_SUBRESOURCE_DATA textureData = {};
+	//textureData.pData = texture->imageData; // pointer to our image data
+	//textureData.RowPitch = texture->bytesPerRow; // size of all our triangle vertex data
+	//textureData.SlicePitch = texture->bytesPerRow * texture->resourceDesc.Height; // also the size of our triangle vertex data
 
-	// Now we copy the upload buffer contents to the default heap
-	UpdateSubresources(commandList, textureBuffer, textureBufferUploadHeap, 0, 0, 1, &textureData);
+	//// Now we copy the upload buffer contents to the default heap
+	//UpdateSubresources(commandList, textureBuffer, textureBufferUploadHeap, 0, 0, 1, &textureData);
 
-	// transition the texture default heap to a pixel shader resource (we will be sampling from this heap in the pixel shader to get the color of pixels)
-	commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(textureBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+	//// transition the texture default heap to a pixel shader resource (we will be sampling from this heap in the pixel shader to get the color of pixels)
+	//commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(textureBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 
-	// now we create a shader resource view (descriptor that points to the texture and describes it)
-	for (int i = 0; i < frameBufferCount; ++i)
-	{
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvDesc.Format = texture->resourceDesc.Format;
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MipLevels = 1;
-		device->CreateShaderResourceView(textureBuffer, &srvDesc, descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
-	}
+	//// now we create a shader resource view (descriptor that points to the texture and describes it)
+	//for (int i = 0; i < frameBufferCount; ++i)
+	//{
+	//	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	//	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	//	srvDesc.Format = texture->resourceDesc.Format;
+	//	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	//	srvDesc.Texture2D.MipLevels = 1;
+	//	device->CreateShaderResourceView(textureBuffer, &srvDesc, descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
+	//}
 
 	// Create a resource heap, descriptor heap, and pointer to cbv for each frame
-	for (int i = 0; i < frameBufferCount; i++)
+	/*for (int i = 0; i < frameBufferCount; i++)
 	{
 		device->CreateCommittedResource(
 			&heapProperties,
@@ -560,14 +559,13 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		constantBufferResource[i]->Map(0, &readRange, reinterpret_cast<void**>(&cbvGPUAddress[i]));
 
 		memcpy(cbvGPUAddress[i], &translationBuffer, sizeof(translationBuffer));
-	}
+	}*/
 	//================================================================================
 
-	translationBuffer.translate[0] = 0;
+	/*translationBuffer.translate[0] = 0;
 	translationBuffer.translate[1] = 0;
 	translationBuffer.translate[2] = 0;
-	translationBuffer.translate[3] = 0;
-
+	translationBuffer.translate[3] = 0;*/
 
 	commandList->Close();
 	ID3D12CommandList* ppCommandLists[] = { commandList };
@@ -586,6 +584,16 @@ void Dx12Renderer::setWinTitle(const char * title)
 	SetWindowTextA(hwnd, title);
 }
 
+void Dx12Renderer::present()
+{
+	// Present the frame.
+	DXGI_PRESENT_PARAMETERS pp = {};
+	swapChain->Present1(0, 0, &pp);
+
+	WaitForGpu(); //Wait for GPU to finish.
+				  //NOT BEST PRACTICE, only used as such for simplicity.
+}
+
 void Dx12Renderer::setClearColor(float r, float g, float b, float a)
 {
 	clearColor[0] = r;
@@ -594,46 +602,10 @@ void Dx12Renderer::setClearColor(float r, float g, float b, float a)
 	clearColor[3] = a;
 }
 
-void Dx12Renderer::frame()
+void Dx12Renderer::clearBuffer(unsigned int flags)
 {
-	frameIndex = swapChain->GetCurrentBackBufferIndex();
-	// Update =================================================
-
-	if (translationBuffer.translate[0] >= 0.9 || translationBuffer.translate[0] <= -0.95)
-	{
-		direction *= -1;
-	}
-
-	translationBuffer.translate[0] += 0.0001 * direction;
-
-	// Update GPU memory
-	memcpy(cbvGPUAddress[frameIndex], &translationBuffer, sizeof(translationBuffer));
-
-	/*void* mappedMem = nullptr;
-	D3D12_RANGE readRange = { 0, 0 };
-	if (SUCCEEDED(constantBufferResource[frameIndex]->Map(0, &readRange, &mappedMem)))
-	{
-		memcpy(mappedMem, &translationBuffer, sizeof(CBtranslate));
-
-		D3D12_RANGE writeRange = { 0, sizeof(CBtranslate) };
-		constantBufferResource[frameIndex]->Unmap(0, &writeRange);
-	}*/
-
-	// ========================================================
-
-
-	commandAllocator[0]->Reset();
-	commandList->Reset(commandAllocator[0], pipelineStateObject);
-
-	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeap[frameIndex] };
-	commandList->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
-
-	commandList->SetGraphicsRootSignature(rootSignature);
-	
-	commandList->SetGraphicsRootDescriptorTable(0, descriptorHeap[frameIndex]->GetGPUDescriptorHandleForHeapStart());
-
-	commandList->RSSetViewports(1, &viewport);
-	commandList->RSSetScissorRects(1, &scissorRect);
+	commandAllocator[frameIndex]->Reset();
+	commandList->Reset(commandAllocator[frameIndex], nullptr);
 
 	setResourceTransitionBarrier(commandList,
 		renderTargets[frameIndex],
@@ -646,17 +618,73 @@ void Dx12Renderer::frame()
 	cdh.ptr += rtvDescriptorSize * frameIndex;
 
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-	
+
 	// Record commands.
 	commandList->OMSetRenderTargets(1, &cdh, true, &dsvHandle); // 3rd parameter true or false??
 
-	commandList->ClearRenderTargetView(cdh, clearColor, 0, nullptr);
-	commandList->ClearDepthStencilView(dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	if (flags & CLEAR_BUFFER_FLAGS::COLOR)
+	{
+		commandList->ClearRenderTargetView(cdh, clearColor, 0, nullptr);
+	}
+	if (flags & CLEAR_BUFFER_FLAGS::DEPTH)
+	{
+		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	}
+}
 
+void Dx12Renderer::submit(Mesh * mesh)
+{
+	drawList[mesh->technique].push_back(mesh);
+}
+
+void Dx12Renderer::frame()
+{
+	frameIndex = swapChain->GetCurrentBackBufferIndex();
+	commandList->SetGraphicsRootSignature(rootSignature);
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
-	commandList->SetGraphicsRootConstantBufferView(1, constantBufferResource[frameIndex]->GetGPUVirtualAddress());
-	commandList->DrawInstanced(3, 1, 0, 0);
+
+	Dx12Material* material;
+	Dx12RenderState* renderState;
+	Dx12Texture2D* texture;
+	Dx12Sampler2D* sampler;
+	Dx12VertexBuffer* vBuffer;
+	Dx12ConstantBuffer* cBuffer;
+
+	for (auto work : drawList)
+	{
+		material = (Dx12Material*)(work.first->getMaterial());
+		renderState = (Dx12RenderState*)(work.first->getRenderState());
+
+		commandList->SetGraphicsRootConstantBufferView(3, material->constantBuffers[DIFFUSE_TINT]->getUploadHeap()->GetGPUVirtualAddress());
+		commandList->SetPipelineState(renderState->getPSO());
+		for (auto mesh : work.second)
+		{
+			size_t numberElements = mesh->geometryBuffers[0].numElements;
+			for (auto t : mesh->textures)
+			{
+				texture = (Dx12Texture2D*)(t.second);
+				sampler = (Dx12Sampler2D*)(texture->sampler);
+
+				ID3D12DescriptorHeap* descriptorHeaps[] = { texture->getDescriptorHeap(), sampler->getDescriptorHeap() };
+				commandList->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
+
+				commandList->SetGraphicsRootDescriptorTable(0, texture->getDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+				commandList->SetGraphicsRootDescriptorTable(1, sampler->getDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+			}
+			for (auto element : mesh->geometryBuffers)
+			{
+				vBuffer = (Dx12VertexBuffer*)(element.second.buffer);
+				commandList->IASetVertexBuffers(0, 1, vBuffer->getView());
+			}
+			cBuffer = (Dx12ConstantBuffer*)(mesh->txBuffer);
+			commandList->SetGraphicsRootConstantBufferView(2, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
+			commandList->DrawInstanced(3, numberElements, 0, 0);
+		}
+	}
+
+	drawList.clear();
 
 	setResourceTransitionBarrier(commandList,
 		renderTargets[frameIndex],
@@ -670,13 +698,6 @@ void Dx12Renderer::frame()
 	// Execute the command list.
 	ID3D12CommandList* listsToExecute[] = { commandList };
 	commandQueue->ExecuteCommandLists(ARRAYSIZE(listsToExecute), listsToExecute);
-
-	// Present the frame.
-	DXGI_PRESENT_PARAMETERS pp = {};
-	swapChain->Present1(0, 0, &pp);
-
-	WaitForGpu(); //Wait for GPU to finish.
-				  //NOT BEST PRACTICE, only used as such for simplicity.
 }
 
 bool Dx12Renderer::initializeWindow(HINSTANCE hInstance, int width, int height, bool fullscreen)

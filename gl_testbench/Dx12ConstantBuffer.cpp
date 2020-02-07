@@ -58,3 +58,13 @@ void Dx12ConstantBuffer::setData(const void * data, size_t size, Material * m, u
 void Dx12ConstantBuffer::bind(Material *)
 {
 }
+
+ID3D12Resource * Dx12ConstantBuffer::getUploadHeap()
+{
+	return uploadHeap;
+}
+
+UINT8 * Dx12ConstantBuffer::getMappedBuffer()
+{
+	return mappedBuffer;
+}

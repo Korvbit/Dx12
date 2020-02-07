@@ -21,6 +21,8 @@ public:
 	// update the GPU memory.
 	void setData(const void* data, size_t size, Material* m, unsigned int location);
 	void bind(Material*);
+	ID3D12Resource* getUploadHeap();
+	UINT8* getMappedBuffer();
 	
 	std::string name;
 	unsigned int location;

@@ -19,6 +19,7 @@ public:
 
 	int loadFromFile(std::string filename);
 	void bind(unsigned int slot) {};
+	ID3D12DescriptorHeap* getDescriptorHeap();
 
 	BYTE* imageData;
 	D3D12_RESOURCE_DESC resourceDesc;

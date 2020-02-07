@@ -54,6 +54,7 @@ void Dx12VertexBuffer::setData(const void * data, size_t size, size_t offset)
 
 void Dx12VertexBuffer::bind(size_t offset, size_t size, unsigned int location)
 {
+
 }
 
 void Dx12VertexBuffer::unbind()
@@ -63,4 +64,9 @@ void Dx12VertexBuffer::unbind()
 size_t Dx12VertexBuffer::getSize()
 {
 	return size_t();
+}
+
+D3D12_VERTEX_BUFFER_VIEW * Dx12VertexBuffer::getView()
+{
+	return &view;
 }

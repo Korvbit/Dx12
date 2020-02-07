@@ -9,7 +9,7 @@ struct VSout {
 	float2 texCoords	: TEXCOORD;
 };
 
-cbuffer CB : register(b0) {
+cbuffer translate : register(b0) {
 	float X, Y, Z, A;
 }
 

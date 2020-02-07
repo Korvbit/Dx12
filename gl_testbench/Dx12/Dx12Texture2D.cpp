@@ -154,6 +154,11 @@ int Dx12Texture2D::loadFromFile(std::string filename)
 	return imageSize;
 }
 
+ID3D12DescriptorHeap * Dx12Texture2D::getDescriptorHeap()
+{
+	return descriptorHeap;
+}
+
 // get the dxgi format equivilent of a wic format
 DXGI_FORMAT GetDXGIFormatFromWICFormat(WICPixelFormatGUID& wicFormatGUID)
 {
