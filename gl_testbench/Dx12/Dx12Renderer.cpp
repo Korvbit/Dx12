@@ -651,6 +651,8 @@ void Dx12Renderer::frame()
 	Dx12Texture2D* texture;
 	Dx12Sampler2D* sampler;
 	Dx12VertexBuffer* vBuffer;
+	Dx12VertexBuffer* nBuffer;
+	Dx12VertexBuffer* uBuffer;
 	Dx12ConstantBuffer* cBuffer;
 
 	for (auto work : drawList)
@@ -674,11 +676,17 @@ void Dx12Renderer::frame()
 				commandList->SetGraphicsRootDescriptorTable(0, texture->getDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 				commandList->SetGraphicsRootDescriptorTable(1, sampler->getDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 			}
-			for (auto element : mesh->geometryBuffers)
+			/*for (auto element : mesh->geometryBuffers)
 			{
 				vBuffer = (Dx12VertexBuffer*)(element.second.buffer);
-				commandList->IASetVertexBuffers(0, 1, vBuffer->getView());
-			}
+				commandList->IASetVertexBuffers(element.first, 1, vBuffer->getView());
+			}*/
+			vBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[POSITION].buffer);
+			nBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[NORMAL].buffer);
+			uBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[TEXTCOORD].buffer);
+			D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[] = { *vBuffer->getView(), *nBuffer->getView(), *uBuffer->getView() };
+			commandList->IASetVertexBuffers(0, ARRAYSIZE(vertexBufferViews), vertexBufferViews);
+
 			cBuffer = (Dx12ConstantBuffer*)(mesh->txBuffer);
 			commandList->SetGraphicsRootConstantBufferView(2, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
 			commandList->DrawInstanced(3, 1, 0, 0);

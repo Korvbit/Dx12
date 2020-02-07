@@ -28,14 +28,8 @@ Dx12VertexBuffer::Dx12VertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage, 
 		IID_PPV_ARGS(&buffer)
 	);
 
-
-	/*void* dataBegin = nullptr;
-	D3D12_RANGE range = { 0,0 };
-	buffer->Map(0, &range, &dataBegin);
-	buffer->Unmap(0, nullptr);*/
-
 	view.BufferLocation = buffer->GetGPUVirtualAddress();
-	view.StrideInBytes = size / 100;
+	view.StrideInBytes = size / 300;
 	view.SizeInBytes = size;
 }
 
