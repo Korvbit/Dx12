@@ -604,9 +604,11 @@ void Dx12Renderer::setClearColor(float r, float g, float b, float a)
 
 void Dx12Renderer::clearBuffer(unsigned int flags)
 {
-	commandAllocator[frameIndex]->Reset();
-	commandList->Reset(commandAllocator[frameIndex], nullptr);
+	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
+	commandAllocator[frameIndex]->Reset();
+	commandList->Reset(commandAllocator[frameIndex], NULL);
+	
 	setResourceTransitionBarrier(commandList,
 		renderTargets[frameIndex],
 		D3D12_RESOURCE_STATE_PRESENT,		// state before
@@ -620,7 +622,7 @@ void Dx12Renderer::clearBuffer(unsigned int flags)
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 
 	// Record commands.
-	commandList->OMSetRenderTargets(1, &cdh, true, &dsvHandle); // 3rd parameter true or false??
+	commandList->OMSetRenderTargets(1, &cdh, false, &dsvHandle);
 
 	if (flags & CLEAR_BUFFER_FLAGS::COLOR)
 	{
@@ -639,7 +641,6 @@ void Dx12Renderer::submit(Mesh * mesh)
 
 void Dx12Renderer::frame()
 {
-	frameIndex = swapChain->GetCurrentBackBufferIndex();
 	commandList->SetGraphicsRootSignature(rootSignature);
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
@@ -680,7 +681,7 @@ void Dx12Renderer::frame()
 			}
 			cBuffer = (Dx12ConstantBuffer*)(mesh->txBuffer);
 			commandList->SetGraphicsRootConstantBufferView(2, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
-			commandList->DrawInstanced(3, numberElements, 0, 0);
+			commandList->DrawInstanced(3, 1, 0, 0);
 		}
 	}
 

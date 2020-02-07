@@ -1,6 +1,5 @@
 #include "Dx12RenderState.h"
-
-
+#include <string>
 
 Dx12RenderState::Dx12RenderState(ID3D12Device* rendererDevice)
 {
@@ -58,9 +57,9 @@ ID3D12PipelineState * Dx12RenderState::getPSO()
 void Dx12RenderState::CreatePipelineState(ID3DBlob * vertexBlob, ID3DBlob * pixelBlob, ID3D12RootSignature* rootSignature)
 {
 	D3D12_INPUT_ELEMENT_DESC inputElementDesc[] = {
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{"NORMAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 	};
 
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc;
@@ -87,7 +86,7 @@ void Dx12RenderState::CreatePipelineState(ID3DBlob * vertexBlob, ID3DBlob * pixe
 	gpsd.SampleMask = UINT_MAX;
 
 	// Specify rasterizer behaviour
-	gpsd.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+	gpsd.RasterizerState.FillMode = fillMode;
 	gpsd.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 
 	// Specify blend descriptions

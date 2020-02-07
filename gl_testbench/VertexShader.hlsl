@@ -1,6 +1,6 @@
 struct VSin {
-	float3 pos			: POSITION;
-	float3 nor			: NORMAL;
+	float4 pos			: POSITION;
+	float4 nor			: NORMAL;
 	float2 texCoords	: TEXCOORD;
 };
 
@@ -10,12 +10,16 @@ struct VSout {
 };
 
 cbuffer translate : register(b0) {
-	float X, Y, Z, A;
+	float X, Y, Z, W;
+}
+
+cbuffer diffuse : register(b1) {
+	float R, G, B, A;
 }
 
 VSout VS_main(VSin input, uint index : SV_VertexID) {
 	VSout output = (VSout)0;
-	output.pos = float4(input.pos, 1.0f) + float4(X, Y, Z, A);
+	output.pos = input.pos + float4(X, Y, Z, W);
 	output.texCoords = input.texCoords;
 
 	return output;
