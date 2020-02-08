@@ -18,7 +18,6 @@ public:
 	~Dx12Texture2D();
 
 	int loadFromFile(std::string filename);
-	int loadImageFromFile(std::string filename);
 	void bind(unsigned int slot) {};
 	ID3D12DescriptorHeap* getDescriptorHeap();
 
