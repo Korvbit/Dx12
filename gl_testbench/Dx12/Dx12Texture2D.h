@@ -14,10 +14,11 @@ class Dx12Texture2D :
 	public Texture2D
 {
 public:
-	Dx12Texture2D(ID3D12Device* rendererDevice, ID3D12GraphicsCommandList* rendererCommandList, ID3D12CommandQueue* rendererCommandQueue);
+	Dx12Texture2D(ID3D12Device* rendererDevice, ID3D12GraphicsCommandList* rendererCommandList, ID3D12CommandQueue* rendererCommandQueue, ID3D12CommandAllocator* rendererCommandAllocator);
 	~Dx12Texture2D();
 
 	int loadFromFile(std::string filename);
+	int loadImageFromFile(std::string filename);
 	void bind(unsigned int slot) {};
 	ID3D12DescriptorHeap* getDescriptorHeap();
 
@@ -29,9 +30,13 @@ private:
 	ID3D12Device* device;
 	ID3D12GraphicsCommandList* commandList;
 	ID3D12CommandQueue* commandQueue;
+	ID3D12CommandAllocator* commandAllocator;
 	ID3D12Resource* textureBuffer;
 	ID3D12Resource* textureBufferUploadHeap;
 	ID3D12DescriptorHeap* descriptorHeap;
+	ID3D12Fence* fence;
+	UINT64 fenceValue;
+	HANDLE fenceEvent;
 };
 
 DXGI_FORMAT GetDXGIFormatFromWICFormat(WICPixelFormatGUID& wicFormatGUID);

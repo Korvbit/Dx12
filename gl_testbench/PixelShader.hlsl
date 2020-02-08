@@ -11,6 +11,6 @@ struct PSin {
 };
 
 float4 PS_main(PSin input) : SV_TARGET0 {
-	return float4(R, G, B, A);
+	//return float4(R, G, B, A);
 	return tex.Sample(samp, input.texCoords);
 }

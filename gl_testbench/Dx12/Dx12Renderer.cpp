@@ -44,7 +44,8 @@ VertexBuffer * Dx12Renderer::makeVertexBuffer(size_t size, VertexBuffer::DATA_US
 
 Texture2D * Dx12Renderer::makeTexture2D()
 {
-	return (Texture2D*)new Dx12Texture2D(device, commandList, commandQueue);
+	frameIndex = swapChain->GetCurrentBackBufferIndex();
+	return (Texture2D*)new Dx12Texture2D(device, commandList, commandQueue, commandAllocator[frameIndex]);
 }
 
 Sampler2D * Dx12Renderer::makeSampler2D()
@@ -143,9 +144,12 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 
 
 	// Create fences
-	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence[0]));
-	fenceValue[0] = 1;
-	fenceEvent = CreateEvent(0, false, false, 0);
+	for (int i = 0; i < frameBufferCount; ++i)
+	{
+		device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence[i]));
+		fenceValue[i] = 1;
+		fenceEvent = CreateEvent(0, false, false, 0);
+	}
 
 	SafeRelease(&factory);
 	factory = nullptr;
@@ -459,7 +463,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 
 	// Create constant buffer ================================================
 
-	/*for (int i = 0; i < frameBufferCount; i++)
+	for (int i = 0; i < frameBufferCount; i++)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC heapDescriptorDesc = {};
 		heapDescriptorDesc.NumDescriptors = 1;
@@ -467,7 +471,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		heapDescriptorDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 		device->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&descriptorHeap[i]));
 	}
-
+/*
 	UINT cbSizeAligned = (sizeof(ConstantBuffer) + 255) & ~255;
 
 	D3D12_HEAP_PROPERTIES heapProperties = {};
@@ -488,7 +492,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 
 	// TEMPORARY Create and load the texture
 	//Dx12Texture2D* texture = new Dx12Texture2D(device, commandList, commandQueue);
-	//texture->loadFromFile("../assets/textures/fatboy.png");
+	//texture->loadImageFromFile("../assets/textures/fatboy.png");
 
 	//device->CreateCommittedResource(
 	//	&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), // a default heap
@@ -540,32 +544,6 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	//	srvDesc.Texture2D.MipLevels = 1;
 	//	device->CreateShaderResourceView(textureBuffer, &srvDesc, descriptorHeap[i]->GetCPUDescriptorHandleForHeapStart());
 	//}
-
-	// Create a resource heap, descriptor heap, and pointer to cbv for each frame
-	/*for (int i = 0; i < frameBufferCount; i++)
-	{
-		device->CreateCommittedResource(
-			&heapProperties,
-			D3D12_HEAP_FLAG_NONE,
-			&resourceDesc,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&constantBufferResource[i])
-		);
-
-		constantBufferResource[i]->SetName(L"cb heap");
-
-		CD3DX12_RANGE readRange(0, 0);
-		constantBufferResource[i]->Map(0, &readRange, reinterpret_cast<void**>(&cbvGPUAddress[i]));
-
-		memcpy(cbvGPUAddress[i], &translationBuffer, sizeof(translationBuffer));
-	}*/
-	//================================================================================
-
-	/*translationBuffer.translate[0] = 0;
-	translationBuffer.translate[1] = 0;
-	translationBuffer.translate[2] = 0;
-	translationBuffer.translate[3] = 0;*/
 
 	commandList->Close();
 	ID3D12CommandList* ppCommandLists[] = { commandList };
@@ -676,11 +654,6 @@ void Dx12Renderer::frame()
 				commandList->SetGraphicsRootDescriptorTable(0, texture->getDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 				commandList->SetGraphicsRootDescriptorTable(1, sampler->getDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 			}
-			/*for (auto element : mesh->geometryBuffers)
-			{
-				vBuffer = (Dx12VertexBuffer*)(element.second.buffer);
-				commandList->IASetVertexBuffers(element.first, 1, vBuffer->getView());
-			}*/
 			vBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[POSITION].buffer);
 			nBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[NORMAL].buffer);
 			uBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[TEXTCOORD].buffer);
@@ -774,13 +747,13 @@ bool Dx12Renderer::initializeWindow(HINSTANCE hInstance, int width, int height, 
 void Dx12Renderer::WaitForGpu()
 {
 	// Signal when the fence has increased in value
-	const UINT64 signalValue = fenceValue[0];
-	commandQueue->Signal(fence[0], signalValue);
-	fenceValue[0]++; // Increment the comparison value inbefore the next call
+	const UINT64 signalValue = fenceValue[frameIndex];
+	commandQueue->Signal(fence[frameIndex], signalValue);
+	fenceValue[frameIndex]++; // Increment the comparison value inbefore the next call
 
 	// Wait until the value has been incremented
-	if (fence[0]->GetCompletedValue() < signalValue) {
-		fence[0]->SetEventOnCompletion(signalValue, fenceEvent);
+	if (fence[frameIndex]->GetCompletedValue() < signalValue) {
+		fence[frameIndex]->SetEventOnCompletion(signalValue, fenceEvent);
 		WaitForSingleObject(fenceEvent, INFINITE);
 	}
 }
