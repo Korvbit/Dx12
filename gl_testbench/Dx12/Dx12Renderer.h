@@ -13,15 +13,6 @@
 #include "d3dx12.h"
 #include "functions.h"
 
-struct Vertex {
-	float pos[3];
-	float texCoords[2];
-};
-
-struct CBtranslate {
-	float translate[4];
-};
-
 class Dx12Renderer :
 	public Renderer
 {
@@ -42,21 +33,13 @@ public:
 	D3D12_RECT scissorRect;
 
 	ID3D12RootSignature* rootSignature;
-	ID3D12PipelineState* pipelineStateObject;
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 
 	ID3D12Device* device;
-	ID3D12DescriptorHeap* descriptorHeap[frameBufferCount];
 	ID3D12DescriptorHeap* rtvDescriptorHeap;
 	ID3D12DescriptorHeap* dsDescriptorHeap;
 	int rtvDescriptorSize;
-	ID3D12Resource* textureBufferUploadHeap;
-	ID3D12Resource1* constantBufferResource[frameBufferCount];
 	ID3D12Resource* renderTargets[frameBufferCount];
-	ID3D12Resource* textureBuffer;
-	ID3D12Resource* vertexBuffer;
 	ID3D12Resource* depthStencilBuffer;
-	CBtranslate translationBuffer;
 	ID3D12CommandQueue* commandQueue;
 	ID3D12CommandAllocator* commandAllocator[frameBufferCount];
 	ID3D12GraphicsCommandList* commandList;
@@ -64,7 +47,6 @@ public:
 	UINT64 fenceValue[frameBufferCount];
 	HANDLE fenceEvent;
 	IDXGISwapChain3* swapChain;
-	UINT8* cbvGPUAddress[frameBufferCount];
 	std::unordered_map<Technique*, std::vector<Mesh*>> drawList;
 	unsigned int clearFlags;
 
