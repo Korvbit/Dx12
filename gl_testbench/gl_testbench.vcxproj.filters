@@ -157,14 +157,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\assets\GL45\FragmentShader.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\assets\GL45\VertexShader.glsl">
-      <Filter>Resource Files</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <FxCompile Include="VertexShader.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>

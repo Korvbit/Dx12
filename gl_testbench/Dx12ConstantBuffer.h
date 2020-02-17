@@ -6,11 +6,7 @@
 #include <vector>
 #include "IA.h"
 #include "ConstantBuffer.h"
-
-typedef union {
-	struct { float x, y, z, w; };
-	struct { float r, g, b, a; };
-} float4;
+#include "Dx12/functions.h"
 
 class Dx12ConstantBuffer : public ConstantBuffer
 {
@@ -20,7 +16,6 @@ public:
 	// set data will update the buffer associated, including whatever is necessary to
 	// update the GPU memory.
 	void setData(const void* data, size_t size, Material* m, unsigned int location);
-	void bind(Material*);
 	ID3D12Resource* getUploadHeap();
 	UINT8* getMappedBuffer();
 	

@@ -11,8 +11,6 @@ class Sampler2D
 public:
 	Sampler2D();
 	virtual ~Sampler2D();
-	virtual void setMagFilter(FILTER filter) = 0;
-	virtual void setMinFilter(FILTER filter) = 0;
 	virtual void setWrap(WRAPPING s, WRAPPING t) = 0;
 };
 

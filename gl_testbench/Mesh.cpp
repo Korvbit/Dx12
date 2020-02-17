@@ -22,13 +22,6 @@ void Mesh::addIAVertexBufferBinding(
 	geometryBuffers[inputStream] = { sizeElement, numElements, offset, buffer };
 };
 
-void Mesh::bindIAVertexBuffer(unsigned int location)
-{
-	// no checking if the key is valid...TODO
-	const VertexBufferBind& vb = geometryBuffers[location];
-	vb.buffer->bind(vb.offset,vb.numElements*vb.sizeElement,location);
-}
-
 // note, slot is a value set in the shader as well (registry, or binding)
 void Mesh::addTexture(Texture2D* texture, unsigned int slot)
 {

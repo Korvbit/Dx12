@@ -203,10 +203,6 @@
     <ClInclude Include="Transform.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\assets\GL45\FragmentShader.glsl" />
-    <None Include="..\assets\GL45\VertexShader.glsl" />
-  </ItemGroup>
-  <ItemGroup>
     <FxCompile Include="PixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>

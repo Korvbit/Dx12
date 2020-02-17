@@ -10,9 +10,6 @@ public:
 	Dx12VertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage, ID3D12Device* rendererDevice);
 	~Dx12VertexBuffer();
 	void setData(const void* data, size_t size, size_t offset);
-	void bind(size_t offset, size_t size, unsigned int location);
-	void unbind();
-	size_t getSize();
 	D3D12_VERTEX_BUFFER_VIEW* getView();
 
 private:

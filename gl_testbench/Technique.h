@@ -12,7 +12,6 @@ public:
 	virtual ~Technique();
 	Material* getMaterial() { return material; };
 	RenderState* getRenderState() { return renderState; };
-	virtual void enable(Renderer* renderer);
 protected:
 	Material* material = nullptr;
 	RenderState* renderState = nullptr;

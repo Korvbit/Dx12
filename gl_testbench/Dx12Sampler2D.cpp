@@ -22,14 +22,6 @@ Dx12Sampler2D::~Dx12Sampler2D()
 {
 }
 
-void Dx12Sampler2D::setMagFilter(FILTER filter)
-{
-}
-
-void Dx12Sampler2D::setMinFilter(FILTER filter)
-{
-}
-
 void Dx12Sampler2D::setWrap(WRAPPING s, WRAPPING t)
 {
 	samplerDesc.AddressU = s ? D3D12_TEXTURE_ADDRESS_MODE_CLAMP : D3D12_TEXTURE_ADDRESS_MODE_WRAP;

@@ -14,8 +14,6 @@ public:
 
 	void setWireFrame(bool wireframe);
 
-	void set();
-
 	D3D12_FILL_MODE getFillMode();
 	D3D12_DEPTH_STENCIL_DESC* getStencilDesc();
 	D3D12_DEPTH_STENCILOP_DESC* getStencilOpDesc();

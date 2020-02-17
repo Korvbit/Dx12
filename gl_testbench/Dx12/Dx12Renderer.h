@@ -56,8 +56,6 @@ public:
 	Texture2D* makeTexture2D();
 	Sampler2D* makeSampler2D();
 	RenderState* makeRenderState();
-	std::string getShaderPath() { return std::string(""); };
-	std::string getShaderExtension() { return std::string(".hlsl"); };
 	ConstantBuffer* makeConstantBuffer(std::string NAME, unsigned int location);
 	Technique* makeTechnique(Material*, RenderState*);
 	void setResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList, ID3D12Resource* resource,
@@ -70,7 +68,6 @@ public:
 
 	void setClearColor(float r, float g, float b, float a);
 	void clearBuffer(unsigned int flags);
-	void setRenderState(RenderState* ps) {};
 	void submit(Mesh* mesh);
 	void frame();
 

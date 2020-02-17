@@ -55,10 +55,6 @@ void Dx12ConstantBuffer::setData(const void * data, size_t size, Material * m, u
 	memcpy(mappedBuffer, data, size);
 }
 
-void Dx12ConstantBuffer::bind(Material *)
-{
-}
-
 ID3D12Resource * Dx12ConstantBuffer::getUploadHeap()
 {
 	return uploadHeap;

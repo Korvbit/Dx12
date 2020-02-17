@@ -9,6 +9,7 @@
 #include "Mesh.h"
 #include "Texture2D.h"
 #include <math.h>
+#include "Dx12/functions.h"
 
 using namespace std;
 Renderer* renderer;
@@ -36,22 +37,24 @@ double gLastDelta = 0.0;
 
 void updateDelta()
 {
-	//#define WINDOW_SIZE 10
-	//static Uint64 start = 0;
-	//static Uint64 last = 0;
-	//static double avg[WINDOW_SIZE] = { 0.0 };
-	//static double lastSum = 10.0;
-	//static int loop = 0;
+	#define WINDOW_SIZE 10
+	static LARGE_INTEGER start;
+	static LARGE_INTEGER last;
+	static LARGE_INTEGER frequency;
+	QueryPerformanceFrequency(&frequency);
+	static double avg[WINDOW_SIZE] = { 0.0 };
+	static double lastSum = 10.0;
+	static int loop = 0;
 
-	//last = start;
-	//start = SDL_GetPerformanceCounter();
-	//double deltaTime = (double)((start - last) * 1000.0 / SDL_GetPerformanceFrequency());
-	//// moving average window of WINDOWS_SIZE
-	//lastSum -= avg[loop];
-	//lastSum += deltaTime;
-	//avg[loop] = deltaTime;
-	//loop = (loop + 1) % WINDOW_SIZE;
-	//gLastDelta = (lastSum / WINDOW_SIZE);
+	last = start;
+	QueryPerformanceCounter(&start);
+	double deltaTime = (double)(start.QuadPart - last.QuadPart) * 1000 / frequency.QuadPart;
+	// moving average window of WINDOWS_SIZE
+	lastSum -= avg[loop];
+	lastSum += deltaTime;
+	avg[loop] = deltaTime;
+	loop = (loop + 1) % WINDOW_SIZE;
+	gLastDelta = (lastSum / WINDOW_SIZE);
 };
 
 // TOTAL_TRIS pretty much decides how many drawcalls in a brute force approach.
@@ -59,17 +62,6 @@ constexpr int TOTAL_TRIS = 100.0f;
 // this has to do with how the triangles are spread in the screen, not important.
 constexpr int TOTAL_PLACES = 2 * TOTAL_TRIS;
 float xt[TOTAL_PLACES], yt[TOTAL_PLACES];
-
-// lissajous points
-typedef union { 
-	struct { float x, y, z, w; };
-	struct { float r, g, b, a; };
-} float4;
-
-typedef union { 
-	struct { float x, y; };
-	struct { float u, v; };
-} float2;
 
 
 void run() {
@@ -124,42 +116,12 @@ void renderScene()
 	renderer->frame();
 	renderer->present();
 	updateDelta();
-	sprintf(gTitleBuff, "OpenGL - %3.0lf", gLastDelta);
+	sprintf(gTitleBuff, "DirectX 12 - %3.0lf", gLastDelta);
 	renderer->setWinTitle(gTitleBuff);
 }
 
 int initialiseTestbench()
 {
-	std::string definePos = "#define POSITION " + std::to_string(POSITION) + "\n";
-	std::string defineNor = "#define NORMAL " + std::to_string(NORMAL) + "\n";
-	std::string defineUV = "#define TEXTCOORD " + std::to_string(TEXTCOORD) + "\n";
-
-	std::string defineTX = "#define TRANSLATION " + std::to_string(TRANSLATION) + "\n";
-	std::string defineTXName = "#define TRANSLATION_NAME " + std::string(TRANSLATION_NAME) + "\n";
-	
-	std::string defineDiffCol = "#define DIFFUSE_TINT " + std::to_string(DIFFUSE_TINT) + "\n";
-	std::string defineDiffColName = "#define DIFFUSE_TINT_NAME " + std::string(DIFFUSE_TINT_NAME) + "\n";
-
-	std::string defineDiffuse = "#define DIFFUSE_SLOT " + std::to_string(DIFFUSE_SLOT) + "\n";
-
-	std::vector<std::vector<std::string>> materialDefs = {
-		// vertex shader, fragment shader, defines
-		// shader filename extension must be asked to the renderer
-		// these strings should be constructed from the IA.h file!!!
-
-		{ "VertexShader", "FragmentShader", definePos + defineNor + defineUV + defineTX + 
-		   defineTXName + defineDiffCol + defineDiffColName }, 
-
-		{ "VertexShader", "FragmentShader", definePos + defineNor + defineUV + defineTX + 
-		   defineTXName + defineDiffCol + defineDiffColName }, 
-
-		{ "VertexShader", "FragmentShader", definePos + defineNor + defineUV + defineTX + 
-		   defineTXName + defineDiffCol + defineDiffColName + defineDiffuse	},
-
-		{ "VertexShader", "FragmentShader", definePos + defineNor + defineUV + defineTX + 
-		   defineTXName + defineDiffCol + defineDiffColName }, 
-	};
-
 	float degToRad = M_PI / 180.0;
 	float scale = (float)TOTAL_PLACES / 359.9;
 	for (int a = 0; a < TOTAL_PLACES; a++)
@@ -173,25 +135,17 @@ int initialiseTestbench()
 	float4 triNor[3] = { { 0.0f,  0.0f, 1.0f, 0.0f },{ 0.0f, 0.0f, 1.0f, 0.0f },{ 0.0f, 0.0f, 1.0f, 0.0f } };
 	float2 triUV[3] =  { { 0.5f,  -0.99f },{ 1.49f, 1.1f },{ -0.51, 1.1f } };
 
-	// load Materials.
-	std::string shaderPath = renderer->getShaderPath();
-	std::string shaderExtension = renderer->getShaderExtension();
 	float diffuse[4][4] = {
 		0.0,0.0,1.0,1.0,
 		0.0,1.0,0.0,1.0,
-		1.0,1.0,1.0,1.0,
+		0.0,0.0,0.0,1.0,
 		1.0,0.0,0.0,1.0
 	};
 
-	for (int i = 0; i < materialDefs.size(); i++)
+	for (int i = 0; i < 4; i++)
 	{
 		// set material name from text file?
 		Material* m = renderer->makeMaterial("material_" + std::to_string(i));
-		m->setShader(shaderPath + materialDefs[i][0] + shaderExtension, Material::ShaderType::VS);
-		m->setShader(shaderPath + materialDefs[i][1] + shaderExtension, Material::ShaderType::PS);
-
-		m->addDefine(materialDefs[i][2], Material::ShaderType::VS);
-		m->addDefine(materialDefs[i][2], Material::ShaderType::PS);
 
 		std::string err;
 		m->compileMaterial(err);
@@ -209,12 +163,13 @@ int initialiseTestbench()
 	// one technique with wireframe
 	RenderState* renderState1 = renderer->makeRenderState();
 	renderState1->setWireFrame(true);
+	RenderState* renderState2 = renderer->makeRenderState();
 
 	// basic technique
 	techniques.push_back(renderer->makeTechnique(materials[0], renderState1));
-	techniques.push_back(renderer->makeTechnique(materials[1], renderer->makeRenderState()));
-	techniques.push_back(renderer->makeTechnique(materials[2], renderer->makeRenderState()));
-	techniques.push_back(renderer->makeTechnique(materials[3], renderer->makeRenderState()));
+	techniques.push_back(renderer->makeTechnique(materials[1], renderState2));
+	techniques.push_back(renderer->makeTechnique(materials[2], renderState2));
+	techniques.push_back(renderer->makeTechnique(materials[3], renderState2));
 
 	// create texture
 	Texture2D* fatboy = renderer->makeTexture2D();
@@ -254,7 +209,7 @@ int initialiseTestbench()
 		// we can create a constant buffer outside the material, for example as part of the Mesh.
 		m->txBuffer = renderer->makeConstantBuffer(std::string(TRANSLATION_NAME), TRANSLATION);
 
-		m->technique = techniques[ i % 4];
+		m->technique = techniques[ i % 4 ];
 		if (i % 4 == 2)
 			m->addTexture(textures[0], DIFFUSE_SLOT);
 
@@ -305,6 +260,6 @@ int main(int argc, char *argv[])
 	renderer->setClearColor(0.0, 0.1, 0.1, 1.0);
 	initialiseTestbench();
 	run();
-	shutdown();
+	//shutdown();
 	return 0;
 };
