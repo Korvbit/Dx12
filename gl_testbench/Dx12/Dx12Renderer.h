@@ -12,6 +12,7 @@
 #include "..//Dx12Mesh.h"
 #include "d3dx12.h"
 #include "functions.h"
+#include "..//Dx12Camera.h"
 
 class Dx12Renderer :
 	public Renderer
@@ -50,6 +51,7 @@ public:
 	std::unordered_map<Technique*, std::vector<Mesh*>> drawList;
 	unsigned int clearFlags;
 
+	Camera* makeCamera(unsigned int width, unsigned int height);
 	Material* makeMaterial(const std::string& name) { return new Dx12Material(name, device); };
 	Mesh* makeMesh();
 	VertexBuffer* makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage);
@@ -61,7 +63,7 @@ public:
 	void setResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList, ID3D12Resource* resource,
 		D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter);
 
-	int initialize(unsigned int width = 800, unsigned int height = 600);
+	int initialize(unsigned int width, unsigned int height);
 	void setWinTitle(const char* title);
 	void present();	// Swap buffers
 	int shutdown() { return -1;	};

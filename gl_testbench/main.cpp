@@ -10,8 +10,13 @@
 #include "Texture2D.h"
 #include <math.h>
 #include "Dx12/functions.h"
+#include "Camera.h"
+
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
 
 using namespace std;
+Camera* camera;
 Renderer* renderer;
 
 // flat scene at the application level...we don't care about this here.
@@ -83,25 +88,19 @@ void run() {
 */
 void updateScene()
 {
-	/*
-	    For each mesh in scene list, update their position 
-	*/
+	static long long shift = 0;
+	const int size = scene.size();
+	for (int i = 0; i < size; i++)	// Update each object in the scene
 	{
-		static long long shift = 0;
-		const int size = scene.size();
-		for (int i = 0; i < size; i++)
-		{
-			const float4 trans { 
-				xt[(int)(float)(i + shift) % (TOTAL_PLACES)], 
-				yt[(int)(float)(i + shift) % (TOTAL_PLACES)], 
-				i * (-1.0 / TOTAL_PLACES),
-				0.0
-			};
-			scene[i]->txBuffer->setData(&trans, sizeof(trans), scene[i]->technique->getMaterial(), TRANSLATION);
-		}
-		// just to make them move...
-		shift+=max(TOTAL_TRIS / 1000.0,TOTAL_TRIS / 100.0);
+		const float4 wvp { 
+			xt[(int)(float)(i + shift) % (TOTAL_PLACES)], 
+			yt[(int)(float)(i + shift) % (TOTAL_PLACES)], 
+			i * (-1.0 / TOTAL_PLACES),
+			0.0
+		};
+		scene[i]->wvpBuffer->setData(&wvp, sizeof(wvp), scene[i]->technique->getMaterial(), TRANSLATION);
 	}
+
 	return;
 };
 
@@ -207,7 +206,7 @@ int initialiseTestbench()
 		m->addIAVertexBufferBinding(uvs, offset, numberOfUVElements , sizeof(float2), TEXTCOORD);
 
 		// we can create a constant buffer outside the material, for example as part of the Mesh.
-		m->txBuffer = renderer->makeConstantBuffer(std::string(TRANSLATION_NAME), TRANSLATION);
+		m->wvpBuffer = renderer->makeConstantBuffer(std::string(TRANSLATION_NAME), TRANSLATION);
 
 		m->technique = techniques[ i % 4 ];
 		if (i % 4 == 2)
@@ -255,11 +254,11 @@ void shutdown() {
 int main(int argc, char *argv[])
 {
 	renderer = Renderer::makeRenderer(Renderer::BACKEND::DX12);
-	renderer->initialize(800,600);
+	renderer->initialize(SCREEN_WIDTH, SCREEN_HEIGHT);
 	renderer->setWinTitle("Dx12");
 	renderer->setClearColor(0.0, 0.1, 0.1, 1.0);
 	initialiseTestbench();
 	run();
-	//shutdown();
+	shutdown();
 	return 0;
 };

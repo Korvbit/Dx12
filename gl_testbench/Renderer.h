@@ -30,6 +30,7 @@ public:
 	Return concrete objects of the BACKEND
 	*/
 	static Renderer* makeRenderer(BACKEND backend);
+	virtual Camera* makeCamera(unsigned int width, unsigned int height) = 0;
 	virtual Material* makeMaterial(const std::string& name) = 0;
 	virtual Mesh* makeMesh() = 0;
 	virtual VertexBuffer* makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage) = 0;
@@ -40,7 +41,7 @@ public:
 	virtual Technique* makeTechnique(Material*, RenderState*) = 0;
 
 	Renderer() { /*InitializeCriticalSection(&protectHere);*/ };
-	virtual int initialize(unsigned int width = 800, unsigned int height = 600) = 0;
+	virtual int initialize(unsigned int width, unsigned int height) = 0;
 	virtual void setWinTitle(const char* title) = 0;
 	virtual void present() = 0;
 	virtual int shutdown() = 0;

@@ -17,7 +17,7 @@ public:
 	Technique* technique; 
 
 	// translation buffers
-	ConstantBuffer* txBuffer;
+	ConstantBuffer* wvpBuffer;
 	// local copy of the translation
 	Transform* transform;
 
@@ -38,4 +38,6 @@ public:
 
 	std::unordered_map<unsigned int, VertexBufferBind> geometryBuffers;
 	std::unordered_map<unsigned int, Texture2D*> textures;
+
+	virtual void Update(float4 translate, float4 rotate, float4 scale) = 0;
 };

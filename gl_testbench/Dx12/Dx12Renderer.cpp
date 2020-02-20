@@ -24,6 +24,11 @@ Dx12Renderer::~Dx12Renderer()
 	}
 }
 
+Camera * Dx12Renderer::makeCamera(unsigned int width, unsigned int height)
+{
+	return new Dx12Camera(width, height);
+}
+
 Mesh * Dx12Renderer::makeMesh()
 {
 	return new Dx12Mesh();
@@ -433,7 +438,7 @@ void Dx12Renderer::frame()
 			D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[] = { *vBuffer->getView(), *nBuffer->getView(), *uBuffer->getView() };
 			commandList->IASetVertexBuffers(0, ARRAYSIZE(vertexBufferViews), vertexBufferViews);
 
-			cBuffer = (Dx12ConstantBuffer*)(mesh->txBuffer);
+			cBuffer = (Dx12ConstantBuffer*)(mesh->wvpBuffer);
 			commandList->SetGraphicsRootConstantBufferView(2, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
 			commandList->DrawInstanced(3, 1, 0, 0);
 		}

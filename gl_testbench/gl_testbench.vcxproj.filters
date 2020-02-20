@@ -81,6 +81,9 @@
     <ClCompile Include="Dx12Mesh.cpp">
       <Filter>Source Files\Dx12</Filter>
     </ClCompile>
+    <ClCompile Include="Dx12Camera.cpp">
+      <Filter>Source Files\Dx12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -153,6 +156,9 @@
       <Filter>Source Files\Dx12</Filter>
     </ClInclude>
     <ClInclude Include="Dx12Mesh.h">
+      <Filter>Source Files\Dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="Dx12Camera.h">
       <Filter>Source Files\Dx12</Filter>
     </ClInclude>
   </ItemGroup>
