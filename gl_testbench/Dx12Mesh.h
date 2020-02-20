@@ -3,6 +3,7 @@
 #include "Mesh.h"
 #include "Dx12/functions.h"
 #include "Dx12VertexBuffer.h"
+#include "Dx12IndexBuffer.h"
 #include <d3d12.h>
 #include <dxgi1_5.h>
 #include <D3Dcompiler.h>
@@ -25,4 +26,5 @@ private:
 	VertexBuffer* pos;
 	VertexBuffer* nor;
 	VertexBuffer* uvs;
+	VertexBuffer* ind;
 };

@@ -2,6 +2,8 @@
 class IndexBuffer
 {
 public:
+
+
 	IndexBuffer() {};
 	virtual ~IndexBuffer() {}
 	virtual void setData(const void* data, size_t size, size_t offset) = 0;

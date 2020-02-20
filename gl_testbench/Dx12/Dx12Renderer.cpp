@@ -356,11 +356,21 @@ void Dx12Renderer::setClearColor(float r, float g, float b, float a)
 
 void Dx12Renderer::clearBuffer(unsigned int flags)
 {
+	clearFlags = flags;
+}
+
+void Dx12Renderer::submit(Mesh * mesh)
+{
+	drawList[mesh->technique].push_back(mesh);
+}
+
+void Dx12Renderer::frame()
+{
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
 	commandAllocator[frameIndex]->Reset();
 	commandList->Reset(commandAllocator[frameIndex], NULL);
-	
+
 	setResourceTransitionBarrier(commandList,
 		renderTargets[frameIndex],
 		D3D12_RESOURCE_STATE_PRESENT,		// state before
@@ -376,23 +386,15 @@ void Dx12Renderer::clearBuffer(unsigned int flags)
 	// Record commands.
 	commandList->OMSetRenderTargets(1, &cdh, false, &dsvHandle);
 
-	if (flags & CLEAR_BUFFER_FLAGS::COLOR)
+	if (clearFlags & CLEAR_BUFFER_FLAGS::COLOR)
 	{
 		commandList->ClearRenderTargetView(cdh, clearColor, 0, nullptr);
 	}
-	if (flags & CLEAR_BUFFER_FLAGS::DEPTH)
+	if (clearFlags & CLEAR_BUFFER_FLAGS::DEPTH)
 	{
 		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
-}
 
-void Dx12Renderer::submit(Mesh * mesh)
-{
-	drawList[mesh->technique].push_back(mesh);
-}
-
-void Dx12Renderer::frame()
-{
 	commandList->SetGraphicsRootSignature(rootSignature);
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
@@ -405,6 +407,7 @@ void Dx12Renderer::frame()
 	Dx12VertexBuffer* vBuffer;
 	Dx12VertexBuffer* nBuffer;
 	Dx12VertexBuffer* uBuffer;
+	Dx12IndexBuffer* iBuffer;
 	Dx12ConstantBuffer* cBuffer;
 
 	for (auto work : drawList)
@@ -417,6 +420,7 @@ void Dx12Renderer::frame()
 		for (auto mesh : work.second)
 		{
 			size_t numberElements = mesh->geometryBuffers[0].numElements;
+			size_t numberIndices = mesh->geometryBuffers[INDEXBUFF].numElements;
 			for (auto t : mesh->textures)
 			{
 				texture = (Dx12Texture2D*)(t.second);
@@ -431,12 +435,15 @@ void Dx12Renderer::frame()
 			vBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[POSITION].buffer);
 			nBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[NORMAL].buffer);
 			uBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[TEXCOORD].buffer);
+			iBuffer = (Dx12IndexBuffer*)(mesh->geometryBuffers[INDEXBUFF].buffer);
 			D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[] = { *vBuffer->getView(), *nBuffer->getView(), *uBuffer->getView() };
 			commandList->IASetVertexBuffers(0, ARRAYSIZE(vertexBufferViews), vertexBufferViews);
+			commandList->IASetIndexBuffer(iBuffer->getView());
 
 			cBuffer = (Dx12ConstantBuffer*)(mesh->txBuffer);
 			commandList->SetGraphicsRootConstantBufferView(2, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
-			commandList->DrawInstanced(6, 1, 0, 0);
+			//commandList->DrawInstanced(numberElements, 1, 0, 0);
+			commandList->DrawIndexedInstanced(numberIndices, 1, 0, 0, 0);
 		}
 	}
 

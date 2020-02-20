@@ -54,9 +54,9 @@ void updateDelta()
 };
 
 // TOTAL_TRIS pretty much decides how many drawcalls in a brute force approach.
-constexpr int TOTAL_TRIS = 100.0f;
+constexpr int TOTAL_TRIS = 4;
 // this has to do with how the triangles are spread in the screen, not important.
-constexpr int TOTAL_PLACES = 2 * TOTAL_TRIS;
+constexpr int TOTAL_PLACES = 40000;
 float xt[TOTAL_PLACES], yt[TOTAL_PLACES];
 
 
@@ -88,15 +88,15 @@ void updateScene()
 		for (int i = 0; i < size; i++)
 		{
 			const float4 trans { 
-				xt[(int)(float)(i + shift) % (TOTAL_PLACES)], 
-				yt[(int)(float)(i + shift) % (TOTAL_PLACES)], 
+				xt[(int)(float)((200*i) + shift) % (TOTAL_PLACES)], 
+				yt[(int)(float)((200*i) + shift) % (TOTAL_PLACES)], 
 				i * (-1.0 / TOTAL_PLACES),
 				0.0
 			};
 			scene[i]->txBuffer->setData(&trans, sizeof(trans), scene[i]->technique->getMaterial(), TRANSLATION);
 		}
 		// just to make them move...
-		shift+=max(TOTAL_TRIS / 1000.0,TOTAL_TRIS / 100.0);
+		shift += 1;// max(TOTAL_TRIS / 1000.0, TOTAL_TRIS / 100.0);
 	}
 	return;
 };
@@ -183,7 +183,8 @@ int initialiseTestbench()
 		Mesh* m = renderer->makeMesh();
 
 		//m->createTriangle();
-		m->createQuad();
+		//m->createQuad();
+		m->createCube();
 
 		// we can create a constant buffer outside the material, for example as part of the Mesh.
 		m->txBuffer = renderer->makeConstantBuffer(std::string(TRANSLATION_NAME), TRANSLATION);

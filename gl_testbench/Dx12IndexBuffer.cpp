@@ -29,8 +29,8 @@ Dx12IndexBuffer::Dx12IndexBuffer(size_t size, int numEntries, ID3D12Device* rend
 	);
 
 	view.BufferLocation = buffer->GetGPUVirtualAddress();
-	view.StrideInBytes = size / numEntries;
 	view.SizeInBytes = size;
+	view.Format = DXGI_FORMAT_R32_UINT;
 }
 
 Dx12IndexBuffer::~Dx12IndexBuffer()
@@ -47,7 +47,7 @@ void Dx12IndexBuffer::setData(const void * data, size_t size, size_t offset)
 	buffer->Unmap(0, nullptr);
 }
 
-D3D12_VERTEX_BUFFER_VIEW * Dx12IndexBuffer::getView()
+D3D12_INDEX_BUFFER_VIEW * Dx12IndexBuffer::getView()
 {
 	return &view;
 }

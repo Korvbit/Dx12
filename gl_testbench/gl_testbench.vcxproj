@@ -191,7 +191,6 @@
     <ClInclude Include="Dx12\Dx12Renderer.h" />
     <ClInclude Include="Dx12\Dx12Texture2D.h" />
     <ClInclude Include="Dx12\functions.h" />
-    <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="Sampler2D.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="VertexBuffer.h" />
