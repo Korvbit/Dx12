@@ -7,6 +7,15 @@ Dx12Material::Dx12Material(const std::string & name, ID3D12Device* rendererDevic
 
 Dx12Material::~Dx12Material()
 {
+	vertexBlob->Release();
+	pixelBlob->Release();
+
+	std::map<unsigned int, Dx12ConstantBuffer*> constantBuffers;
+
+	for (auto work : constantBuffers)
+	{
+		delete work.second;
+	}
 }
 
 int Dx12Material::compileMaterial(std::string & errString)

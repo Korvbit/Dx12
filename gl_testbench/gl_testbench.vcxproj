@@ -156,6 +156,7 @@
   <ItemGroup>
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="Dx12ConstantBuffer.cpp" />
+    <ClCompile Include="Dx12IndexBuffer.cpp" />
     <ClCompile Include="Dx12Material.cpp" />
     <ClCompile Include="Dx12Mesh.cpp" />
     <ClCompile Include="Dx12RenderState.cpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="..\include\stb_image.h" />
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="Dx12ConstantBuffer.h" />
+    <ClInclude Include="Dx12IndexBuffer.h" />
     <ClInclude Include="Dx12Material.h" />
     <ClInclude Include="Dx12Mesh.h" />
     <ClInclude Include="Dx12RenderState.h" />
@@ -189,6 +191,7 @@
     <ClInclude Include="Dx12\Dx12Renderer.h" />
     <ClInclude Include="Dx12\Dx12Texture2D.h" />
     <ClInclude Include="Dx12\functions.h" />
+    <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="Sampler2D.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="VertexBuffer.h" />

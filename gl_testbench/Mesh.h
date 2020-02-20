@@ -13,6 +13,10 @@ public:
 	Mesh();
 	~Mesh();
 
+	virtual void createCube() = 0;
+	virtual void createTriangle() = 0;
+	virtual void createQuad() = 0;
+
 	// technique has: Material, RenderState, Attachments (color, depth, etc)
 	Technique* technique; 
 

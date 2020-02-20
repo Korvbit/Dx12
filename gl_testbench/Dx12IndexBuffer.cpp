@@ -1,6 +1,6 @@
-#include "Dx12VertexBuffer.h"
+#include "Dx12IndexBuffer.h"
 
-Dx12VertexBuffer::Dx12VertexBuffer(size_t size, int numEntries, ID3D12Device* rendererDevice)
+Dx12IndexBuffer::Dx12IndexBuffer(size_t size, int numEntries, ID3D12Device* rendererDevice)
 {
 	device = rendererDevice;
 
@@ -33,12 +33,12 @@ Dx12VertexBuffer::Dx12VertexBuffer(size_t size, int numEntries, ID3D12Device* re
 	view.SizeInBytes = size;
 }
 
-Dx12VertexBuffer::~Dx12VertexBuffer()
+Dx12IndexBuffer::~Dx12IndexBuffer()
 {
 	buffer->Release();
 }
 
-void Dx12VertexBuffer::setData(const void * data, size_t size, size_t offset)
+void Dx12IndexBuffer::setData(const void * data, size_t size, size_t offset)
 {
 	UINT8* gpuAddress;
 	D3D12_RANGE range = { 0,0 };
@@ -47,7 +47,7 @@ void Dx12VertexBuffer::setData(const void * data, size_t size, size_t offset)
 	buffer->Unmap(0, nullptr);
 }
 
-D3D12_VERTEX_BUFFER_VIEW * Dx12VertexBuffer::getView()
+D3D12_VERTEX_BUFFER_VIEW * Dx12IndexBuffer::getView()
 {
 	return &view;
 }

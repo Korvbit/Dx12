@@ -1,14 +1,14 @@
 #pragma once
-#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 #include <d3d12.h>
 #include <dxgi1_5.h>
 #include <D3Dcompiler.h>
 
-class Dx12VertexBuffer : public VertexBuffer
+class Dx12IndexBuffer : public IndexBuffer
 {
 public:
-	Dx12VertexBuffer(size_t size, int numEntries, ID3D12Device* rendererDevice);
-	~Dx12VertexBuffer();
+	Dx12IndexBuffer(size_t size, int numEntries, ID3D12Device* rendererDevice);
+	~Dx12IndexBuffer();
 	void setData(const void* data, size_t size, size_t offset);
 	D3D12_VERTEX_BUFFER_VIEW* getView();
 

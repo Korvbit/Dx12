@@ -20,6 +20,12 @@ Dx12Texture2D::Dx12Texture2D(ID3D12Device* rendererDevice, ID3D12GraphicsCommand
 
 Dx12Texture2D::~Dx12Texture2D()
 {
+	delete imageData;
+
+	textureBuffer->Release();
+	textureBufferUploadHeap->Release();
+	descriptorHeap->Release();
+	fence->Release();
 }
 
 int Dx12Texture2D::loadFromFile(std::string filename)

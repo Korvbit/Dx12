@@ -52,7 +52,7 @@ public:
 
 	Material* makeMaterial(const std::string& name) { return new Dx12Material(name, device); };
 	Mesh* makeMesh();
-	VertexBuffer* makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage);
+	VertexBuffer* makeVertexBuffer(size_t size, int numEntries);
 	Texture2D* makeTexture2D();
 	Sampler2D* makeSampler2D();
 	RenderState* makeRenderState();

@@ -81,6 +81,9 @@
     <ClCompile Include="Dx12Mesh.cpp">
       <Filter>Source Files\Dx12</Filter>
     </ClCompile>
+    <ClCompile Include="Dx12IndexBuffer.cpp">
+      <Filter>Source Files\Dx12</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -153,6 +156,12 @@
       <Filter>Source Files\Dx12</Filter>
     </ClInclude>
     <ClInclude Include="Dx12Mesh.h">
+      <Filter>Source Files\Dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="IndexBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Dx12IndexBuffer.h">
       <Filter>Source Files\Dx12</Filter>
     </ClInclude>
   </ItemGroup>

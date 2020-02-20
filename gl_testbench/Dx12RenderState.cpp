@@ -23,6 +23,7 @@ Dx12RenderState::Dx12RenderState(ID3D12Device* rendererDevice)
 
 Dx12RenderState::~Dx12RenderState()
 {
+	pipelineStateObject->Release();
 }
 
 void Dx12RenderState::setWireFrame(bool wireframe)

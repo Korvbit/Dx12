@@ -4,9 +4,10 @@ Dx12Renderer::Dx12Renderer()
 {
 }
 
-
 Dx12Renderer::~Dx12Renderer()
 {
+	//std::unordered_map<Technique*, std::vector<Mesh*>> drawList;
+
 	rootSignature->Release();
 
 	device->Release();
@@ -26,12 +27,12 @@ Dx12Renderer::~Dx12Renderer()
 
 Mesh * Dx12Renderer::makeMesh()
 {
-	return new Dx12Mesh();
+	return new Dx12Mesh(device);
 }
 
-VertexBuffer * Dx12Renderer::makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage)
+VertexBuffer * Dx12Renderer::makeVertexBuffer(size_t size, int numEntries)
 {
-	return new Dx12VertexBuffer(size, usage, device);
+	return new Dx12VertexBuffer(size, numEntries, device);
 }
 
 Texture2D * Dx12Renderer::makeTexture2D()
@@ -429,13 +430,13 @@ void Dx12Renderer::frame()
 			}
 			vBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[POSITION].buffer);
 			nBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[NORMAL].buffer);
-			uBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[TEXTCOORD].buffer);
+			uBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[TEXCOORD].buffer);
 			D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[] = { *vBuffer->getView(), *nBuffer->getView(), *uBuffer->getView() };
 			commandList->IASetVertexBuffers(0, ARRAYSIZE(vertexBufferViews), vertexBufferViews);
 
 			cBuffer = (Dx12ConstantBuffer*)(mesh->txBuffer);
 			commandList->SetGraphicsRootConstantBufferView(2, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
-			commandList->DrawInstanced(3, 1, 0, 0);
+			commandList->DrawInstanced(6, 1, 0, 0);
 		}
 	}
 

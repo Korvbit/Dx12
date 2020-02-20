@@ -20,6 +20,7 @@ Dx12Sampler2D::Dx12Sampler2D(ID3D12Device* rendererDevice)
 
 Dx12Sampler2D::~Dx12Sampler2D()
 {
+	descriptorHeap->Release();
 }
 
 void Dx12Sampler2D::setWrap(WRAPPING s, WRAPPING t)
