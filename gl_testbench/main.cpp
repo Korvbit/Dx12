@@ -100,7 +100,7 @@ void updateScene()
 		};
 		scene[i]->wvpBuffer->setData(&wvp, sizeof(wvp), scene[i]->technique->getMaterial(), TRANSLATION);
 	}
-
+	shift += 1;
 	return;
 };
 
