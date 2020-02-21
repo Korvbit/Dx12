@@ -155,6 +155,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ConstantBuffer.cpp" />
+    <ClCompile Include="Dx12Camera.cpp" />
     <ClCompile Include="Dx12ConstantBuffer.cpp" />
     <ClCompile Include="Dx12IndexBuffer.cpp" />
     <ClCompile Include="Dx12Material.cpp" />
@@ -180,6 +181,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\stb_image.h" />
     <ClInclude Include="ConstantBuffer.h" />
+    <ClInclude Include="Dx12Camera.h" />
     <ClInclude Include="Dx12ConstantBuffer.h" />
     <ClInclude Include="Dx12IndexBuffer.h" />
     <ClInclude Include="Dx12Material.h" />

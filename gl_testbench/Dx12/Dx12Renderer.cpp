@@ -25,6 +25,16 @@ Dx12Renderer::~Dx12Renderer()
 	}
 }
 
+Camera * Dx12Renderer::makeCamera(unsigned int width, unsigned int height)
+{
+	return new Dx12Camera(width, height);
+}
+
+Material * Dx12Renderer::makeMaterial(const std::string & name)
+{
+	return new Dx12Material(name, device);
+}
+
 Mesh * Dx12Renderer::makeMesh()
 {
 	return new Dx12Mesh(device);
@@ -440,7 +450,7 @@ void Dx12Renderer::frame()
 			commandList->IASetVertexBuffers(0, ARRAYSIZE(vertexBufferViews), vertexBufferViews);
 			commandList->IASetIndexBuffer(iBuffer->getView());
 
-			cBuffer = (Dx12ConstantBuffer*)(mesh->txBuffer);
+			cBuffer = (Dx12ConstantBuffer*)(mesh->wvpBuffer);
 			commandList->SetGraphicsRootConstantBufferView(2, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
 			//commandList->DrawInstanced(numberElements, 1, 0, 0);
 			commandList->DrawIndexedInstanced(numberIndices, 1, 0, 0, 0);

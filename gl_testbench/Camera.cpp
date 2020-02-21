@@ -6,7 +6,6 @@ Camera::Camera()
 {
 }
 
-
 Camera::~Camera()
 {
 }
