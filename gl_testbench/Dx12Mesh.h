@@ -17,20 +17,21 @@ class Dx12Mesh :
 public:
 	Dx12Mesh(
 				ID3D12Device* rendererDevice, 
-				float4 translate =	{ 0.0f, 0.0f, 0.0f, 0.0f },
-				float4 rotate =		{ 0.0f, 0.0f, 0.0f, 0.0f },
-				float4 scale =		{ 1.0f, 1.0f, 1.0f, 0.0f }
+				float3 translate =	{ 0.0f, 0.0f, 0.0f },
+				float3 rotate =		{ 0.0f, 0.0f, 0.0f },
+				float3 scale =		{ 1.0f, 1.0f, 1.0f }
 	);
 	~Dx12Mesh();
 
-	void Update(float4 translate = { 0.0f, 0.0f, 0.0f, 0.0f },
-				float4 rotate = { 0.0f, 0.0f, 0.0f, 0.0f },
-				float4 scale = { 1.0f, 1.0f, 1.0f, 0.0f }
-	);
+	void Update();
 
-	void scale(float4 scale, bool linear);
-	void rotate(float4 rotate);
-	void translate(float4 translate);
+	void scaleMesh(float3 scale);
+	void rotateMesh(float3 rotate);
+	void translateMesh(float3 translate);
+
+	void setScale(float3 scale);
+	void setRotation(float3 rotation);
+	void setTranslation(float3 translation);
 
 	void createCube();
 	void createTriangle();
@@ -43,7 +44,8 @@ private:
 	VertexBuffer* uvs;
 	VertexBuffer* ind;
 
-	DirectX::XMFLOAT4X4 scaleMatrix;
-	DirectX::XMFLOAT4X4 rotationMatrix;
-	DirectX::XMFLOAT4X4 translationMatrix;
+	DirectX::XMFLOAT3 scale;
+	DirectX::XMFLOAT4 rotationQuat;
+	DirectX::XMFLOAT3 translation;
+	DirectX::XMFLOAT4X4 worldMatrix;
 };

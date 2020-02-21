@@ -18,6 +18,11 @@ typedef union {
 } float4;
 
 typedef union {
+	struct { float x, y, z; };
+	struct { float r, g, b; };
+} float3;
+
+typedef union {
 	struct { float x, y; };
 	struct { float u, v; };
 } float2;

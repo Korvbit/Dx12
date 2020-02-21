@@ -1,28 +1,27 @@
 #include "Dx12Mesh.h"
 
-Dx12Mesh::Dx12Mesh(ID3D12Device* rendererDevice, float4 scale, float4 rotate, float4 translate)
+using namespace DirectX;
+
+Dx12Mesh::Dx12Mesh(ID3D12Device* rendererDevice, float3 scale, float3 rotate, float3 translate)
 {
 	device = rendererDevice;
 
-	DirectX::XMFLOAT4 tmpFloat4;
+	DirectX::XMFLOAT3 tmpFloat4;
 	DirectX::XMVECTOR tmpVec;
-	DirectX::XMMATRIX tmpMat;
 
-	tmpFloat4 = DirectX::XMFLOAT4(scale.x, scale.y, scale.z, scale.w);
-	tmpVec = DirectX::XMLoadFloat4(&tmpFloat4);
-	tmpMat = DirectX::XMMatrixScalingFromVector(tmpVec);
-	DirectX::XMStoreFloat4x4(&scaleMatrix, tmpMat);
+	// Store and apply scale
+	tmpFloat4 = DirectX::XMFLOAT3(scale.x, scale.y, scale.z);
+	tmpVec = DirectX::XMLoadFloat3(&tmpFloat4);
+	DirectX::XMStoreFloat3(&this->scale, tmpVec);
 
-	DirectX::XMMATRIX rotMatX = DirectX::XMMatrixRotationX(rotate.x);
-	DirectX::XMMATRIX rotMatY = DirectX::XMMatrixRotationY(rotate.y);
-	DirectX::XMMATRIX rotMatZ = DirectX::XMMatrixRotationZ(rotate.z);
-	tmpMat = rotMatX * rotMatY * rotMatZ;
-	DirectX::XMStoreFloat4x4(&rotationMatrix, tmpMat);
+	// Store and apply rotation quaternion
+	tmpVec = XMQuaternionRotationRollPitchYaw(rotate.z, rotate.x, rotate.y);
+	DirectX::XMStoreFloat4(&this->rotationQuat, tmpVec);
 
-	tmpFloat4 = DirectX::XMFLOAT4(translate.x, translate.y, translate.z, translate.w);
-	tmpVec = DirectX::XMLoadFloat4(&tmpFloat4);
-	tmpMat = DirectX::XMMatrixTranslationFromVector(tmpVec);
-	DirectX::XMStoreFloat4x4(&translationMatrix, tmpMat);
+	//Store and apply translation
+	tmpFloat4 = DirectX::XMFLOAT3(translate.x, translate.y, translate.z);
+	tmpVec = DirectX::XMLoadFloat3(&tmpFloat4);
+	DirectX::XMStoreFloat3(&this->translation, tmpVec);
 }
 
 Dx12Mesh::~Dx12Mesh()
@@ -50,39 +49,62 @@ Dx12Mesh::~Dx12Mesh()
 	}
 }
 
-void Dx12Mesh::Update(float4 translate, float4 rotate, float4 scale)
+void Dx12Mesh::Update()
 {
+	// Create the world matrix
+	DirectX::XMVECTOR tmpVec;
+	DirectX::XMMATRIX tmpMat = DirectX::XMMatrixIdentity();
 
+	// Scale
+	tmpVec = DirectX::XMLoadFloat3(&this->scale);
+	tmpMat *= DirectX::XMMatrixScalingFromVector(tmpVec);
+	// Rotate
+	tmpVec = DirectX::XMLoadFloat4(&this->rotationQuat);
+	tmpMat *= DirectX::XMMatrixRotationQuaternion(tmpVec);
+	// Translate
+	tmpVec = DirectX::XMLoadFloat3(&this->translation);
+	tmpMat *= DirectX::XMMatrixTranslationFromVector(tmpVec);
+
+	// Store the world matrix
+	DirectX::XMStoreFloat4x4(&worldMatrix, tmpMat);
 }
 
-void Dx12Mesh::scale(float4 scale, bool linear)
+void Dx12Mesh::scaleMesh(float3 scale)
 {
-	DirectX::XMMATRIX scaleMat = DirectX::XMMatrixScaling(scale.x, scale.y, scale.z);
-	DirectX::XMMATRIX originalScale = DirectX::XMLoadFloat4x4(&scaleMatrix);
-	if (linear)
-		DirectX::XMStoreFloat4x4(&scaleMatrix, originalScale + scaleMat);
-	else
-		DirectX::XMStoreFloat4x4(&scaleMatrix, originalScale * scaleMat);
+	this->scale = 
+		DirectX::XMFLOAT3(	this->scale.x + scale.x,
+							this->scale.y + scale.y,
+							this->scale.z + scale.z);
 }
 
-void Dx12Mesh::rotate(float4 rotate)
+void Dx12Mesh::rotateMesh(float3 rotate)
 {
-	DirectX::XMMATRIX rotMatX = DirectX::XMMatrixRotationX(rotate.x);
-	DirectX::XMMATRIX rotMatY = DirectX::XMMatrixRotationY(rotate.y);
-	DirectX::XMMATRIX rotMatZ = DirectX::XMMatrixRotationZ(rotate.z);
-
-	DirectX::XMMATRIX originalRot = DirectX::XMLoadFloat4x4(&rotationMatrix);
-	DirectX::XMMATRIX rotMat = originalRot * rotMatX * rotMatY * rotMatZ;
-
-	DirectX::XMStoreFloat4x4(&rotationMatrix, rotMat);
+	DirectX::XMVECTOR tmpVec;
+	tmpVec = DirectX::XMQuaternionMultiply(DirectX::XMLoadFloat4(&this->rotationQuat), XMQuaternionRotationRollPitchYaw(rotate.z, rotate.x, rotate.y));
+	DirectX::XMStoreFloat4(&this->rotationQuat, tmpVec);
 }
 
-void Dx12Mesh::translate(float4 translate)
+void Dx12Mesh::translateMesh(float3 translate)
 {
-	DirectX::XMMATRIX transMat = DirectX::XMMatrixTranslation(translate.x, translate.y, translate.z);
-	DirectX::XMMATRIX originalTrans = DirectX::XMLoadFloat4x4(&translationMatrix);
+	this->translation = 
+		DirectX::XMFLOAT3(	this->translation.x + translate.x,
+							this->translation.y + translate.y,
+							this->translation.z + translate.z);
+}
 
-	DirectX::XMStoreFloat4x4(&translationMatrix, originalTrans + transMat);
+void Dx12Mesh::setScale(float3 scale)
+{
+	this->scale = DirectX::XMFLOAT3(scale.x, scale.y, scale.z);
+}
+
+void Dx12Mesh::setRotation(float3 rotation)
+{
+	DirectX::XMStoreFloat4(&this->rotationQuat, XMQuaternionRotationRollPitchYaw(rotation.z, rotation.x, rotation.y));
+}
+
+void Dx12Mesh::setTranslation(float3 translation)
+{
+	this->translation = DirectX::XMFLOAT3(translation.x, translation.y, translation.z);
 }
 
 void Dx12Mesh::createCube()

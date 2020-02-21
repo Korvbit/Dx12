@@ -44,5 +44,5 @@ public:
 	std::unordered_map<unsigned int, VertexBufferBind> geometryBuffers;
 	std::unordered_map<unsigned int, Texture2D*> textures;
 
-	virtual void Update(float4 translate, float4 rotate, float4 scale) = 0;
+	virtual void Update() = 0;
 };
