@@ -29,6 +29,11 @@ Camera * Dx12Renderer::makeCamera(unsigned int width, unsigned int height)
 	return new Dx12Camera(width, height);
 }
 
+Material * Dx12Renderer::makeMaterial(const std::string & name)
+{
+	return new Dx12Material(name, device);
+}
+
 Mesh * Dx12Renderer::makeMesh()
 {
 	return new Dx12Mesh();

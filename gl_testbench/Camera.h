@@ -7,7 +7,6 @@ public:
 	Camera();
 	~Camera();
 
-	static Camera* makeCamera(int screenWidth, int screenHeight);
 	virtual void Update() = 0;
 
 	int m_screenWidth;

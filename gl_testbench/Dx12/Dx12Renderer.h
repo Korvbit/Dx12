@@ -52,7 +52,7 @@ public:
 	unsigned int clearFlags;
 
 	Camera* makeCamera(unsigned int width, unsigned int height);
-	Material* makeMaterial(const std::string& name) { return new Dx12Material(name, device); };
+	Material* makeMaterial(const std::string& name);
 	Mesh* makeMesh();
 	VertexBuffer* makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage);
 	Texture2D* makeTexture2D();

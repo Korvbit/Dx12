@@ -6,6 +6,7 @@
 #include "Transform.h"
 #include "ConstantBuffer.h"
 #include "Texture2D.h"
+#include "Dx12/functions.h"
 
 class Mesh
 {

@@ -60,7 +60,6 @@ void Dx12Mesh::translate(float4 translate)
 	DirectX::XMMATRIX originalTrans = DirectX::XMLoadFloat4x4(&translationMatrix);
 
 	DirectX::XMStoreFloat4x4(&translationMatrix, originalTrans + transMat);
-
 }
 
 void Dx12Mesh::createCube()

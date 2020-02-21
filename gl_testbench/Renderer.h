@@ -7,6 +7,7 @@
 #include "Technique.h"
 #include "ConstantBuffer.h"
 #include "VertexBuffer.h"
+#include "Camera.h"
 
 class Mesh;
 class Texture2D;
