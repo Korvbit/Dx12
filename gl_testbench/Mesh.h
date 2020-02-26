@@ -7,6 +7,7 @@
 #include "ConstantBuffer.h"
 #include "Texture2D.h"
 #include "Dx12/functions.h"
+#include "Camera.h"
 
 class Mesh
 {
@@ -44,5 +45,5 @@ public:
 	std::unordered_map<unsigned int, VertexBufferBind> geometryBuffers;
 	std::unordered_map<unsigned int, Texture2D*> textures;
 
-	virtual void Update() = 0;
+	virtual void Update(Camera* camera) = 0;
 };

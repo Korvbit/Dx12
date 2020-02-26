@@ -7,7 +7,7 @@
 #include <d3d12.h>
 #include <dxgi1_5.h>
 #include <D3Dcompiler.h>
-#include "Camera.h"
+#include "Dx12Camera.h"
 #include <DirectXMath.h>
 #include "IA.h"
 
@@ -24,7 +24,7 @@ public:
 	);
 	~Dx12Mesh();
 
-	void Update();
+	void Update(Camera* camera);
 
 	void scaleMesh(float3 scale);
 	void rotateMesh(float3 rotate);

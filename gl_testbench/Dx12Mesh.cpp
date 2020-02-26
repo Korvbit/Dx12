@@ -2,7 +2,7 @@
 
 using namespace DirectX;
 
-Dx12Mesh::Dx12Mesh(ID3D12Device* rendererDevice, float3 scale, float3 rotate, float3 translate)
+Dx12Mesh::Dx12Mesh(ID3D12Device* rendererDevice, float3 translate, float3 rotate, float3 scale)
 {
 	device = rendererDevice;
 
@@ -49,8 +49,11 @@ Dx12Mesh::~Dx12Mesh()
 	}
 }
 
-void Dx12Mesh::Update()
+void Dx12Mesh::Update(Camera* camera)
 {
+	rotateMesh(float3({ 0.001f, 0.0f, 0.0f }));
+	translateMesh(float3({ 0.0f, 0.0001f, 0.0f }));
+
 	// Create the world matrix
 	DirectX::XMVECTOR tmpVec;
 	DirectX::XMMATRIX tmpMat;
@@ -68,7 +71,11 @@ void Dx12Mesh::Update()
 	// Store the world matrix
 	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(tmpMat));
 
-	wvpBuffer->setData(&this->worldMatrix, sizeof(this->worldMatrix), technique->getMaterial(), TRANSLATION);
+	// Create wvpMatrix
+	tmpMat *= DirectX::XMLoadFloat4x4(&((Dx12Camera*)camera)->viewMatrix) * DirectX::XMLoadFloat4x4(&((Dx12Camera*)camera)->projectionMatrix);
+
+	// Upload wvpMatrix
+	wvpBuffer->setData(&tmpMat, sizeof(tmpMat), technique->getMaterial(), TRANSLATION);
 }
 
 void Dx12Mesh::scaleMesh(float3 scale)

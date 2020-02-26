@@ -88,7 +88,7 @@ void updateScene()
 	const int size = scene.size();
 	for (int i = 0; i < size; i++)
 	{
-		scene[i]->Update();
+		scene[i]->Update(camera);
 	}
 	return;
 };
@@ -110,6 +110,8 @@ void renderScene()
 
 int initialiseTestbench()
 {
+	camera = renderer->makeCamera(SCREEN_WIDTH, SCREEN_HEIGHT);
+
 	float degToRad = M_PI / 180.0;
 	float scale = (float)TOTAL_PLACES / 359.9;
 	for (int a = 0; a < TOTAL_PLACES; a++)
