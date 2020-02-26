@@ -9,18 +9,13 @@ struct VSout {
 	float2 texCoords	: TEXCOORD;
 };
 
-//cbuffer wvpMatrix : register(b0) {
-//	float4x4 wvpMat;
-//}
-
-cbuffer translate : register(b0) {
-	float X, Y, Z, W;
+cbuffer wvpMatrix : register(b0) {
+	float4x4 wvpMat;
 }
 
 VSout VS_main(VSin input, uint index : SV_VertexID) {
 	VSout output = (VSout)0;
-	//output.pos = mul(input.pos, wvpMat);
-	output.pos = input.pos + float4(X, Y, (1 + Z) / 2, W);
+	output.pos = mul(input.pos, wvpMat);
 	output.texCoords = input.texCoords;
 
 	return output;

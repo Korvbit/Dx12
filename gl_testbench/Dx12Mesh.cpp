@@ -53,11 +53,11 @@ void Dx12Mesh::Update()
 {
 	// Create the world matrix
 	DirectX::XMVECTOR tmpVec;
-	DirectX::XMMATRIX tmpMat = DirectX::XMMatrixIdentity();
+	DirectX::XMMATRIX tmpMat;
 
 	// Scale
 	tmpVec = DirectX::XMLoadFloat3(&this->scale);
-	tmpMat *= DirectX::XMMatrixScalingFromVector(tmpVec);
+	tmpMat = DirectX::XMMatrixScalingFromVector(tmpVec);
 	// Rotate
 	tmpVec = DirectX::XMLoadFloat4(&this->rotationQuat);
 	tmpMat *= DirectX::XMMatrixRotationQuaternion(tmpVec);
@@ -66,7 +66,9 @@ void Dx12Mesh::Update()
 	tmpMat *= DirectX::XMMatrixTranslationFromVector(tmpVec);
 
 	// Store the world matrix
-	DirectX::XMStoreFloat4x4(&worldMatrix, tmpMat);
+	DirectX::XMStoreFloat4x4(&worldMatrix, DirectX::XMMatrixTranspose(tmpMat));
+
+	wvpBuffer->setData(&this->worldMatrix, sizeof(this->worldMatrix), technique->getMaterial(), TRANSLATION);
 }
 
 void Dx12Mesh::scaleMesh(float3 scale)

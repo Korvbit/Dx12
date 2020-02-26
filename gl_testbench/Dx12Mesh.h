@@ -9,6 +9,7 @@
 #include <D3Dcompiler.h>
 #include "Camera.h"
 #include <DirectXMath.h>
+#include "IA.h"
 
 
 class Dx12Mesh :

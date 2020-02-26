@@ -88,15 +88,8 @@ void updateScene()
 	const int size = scene.size();
 	for (int i = 0; i < size; i++)
 	{
-		const float4 wvp { 
-			xt[(int)(float)((200*i) + shift) % (TOTAL_PLACES)], 
-			yt[(int)(float)((200*i) + shift) % (TOTAL_PLACES)], 
-			i * (-1.0 / TOTAL_PLACES),
-			0.0
-		};
-		scene[i]->wvpBuffer->setData(&wvp, sizeof(wvp), scene[i]->technique->getMaterial(), TRANSLATION);
+		scene[i]->Update();
 	}
-	shift += 1;
 	return;
 };
 
