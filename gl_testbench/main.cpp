@@ -59,10 +59,10 @@ void updateDelta()
 };
 
 // TOTAL_TRIS pretty much decides how many drawcalls in a brute force approach.
-constexpr int TOTAL_TRIS = 4;
+constexpr int TOTAL_OBJECTS = 100;
 // this has to do with how the triangles are spread in the screen, not important.
-constexpr int TOTAL_PLACES = 40000;
-float xt[TOTAL_PLACES], yt[TOTAL_PLACES];
+constexpr int TOTAL_PLACES = 8000;
+float xt[TOTAL_PLACES], yt[TOTAL_PLACES], zt[TOTAL_PLACES];
 
 
 void run() {
@@ -88,11 +88,12 @@ void updateScene()
 	const int size = scene.size();
 	for (int i = 0; i < size; i++)
 	{
+		scene[i]->rotateMesh(float3({ 0.005f, 0.0f, 0.0f }));
 		scene[i]->setTranslation(
 			{
-				xt[(int)(float)((500 * i) + shift) % (TOTAL_PLACES)],
-				yt[(int)(float)((500 * i) + shift) % (TOTAL_PLACES)],
-				i * (-0.1f)
+				xt[(int)(float)((100 * i) + shift) % (TOTAL_PLACES)],
+				yt[(int)(float)((100 * i) + shift) % (TOTAL_PLACES)],
+				zt[(int)(float)((100 * i) + shift) % (TOTAL_PLACES)],
 			}
 		);
 		scene[i]->Update(camera);
@@ -124,8 +125,9 @@ int initialiseTestbench()
 	float scale = (float)TOTAL_PLACES / 359.9;
 	for (int a = 0; a < TOTAL_PLACES; a++)
 	{
-		xt[a] = 0.8f * cosf(degToRad * ((float)a/scale) * 3.0);
-		yt[a] = 0.8f * sinf(degToRad * ((float)a/scale) * 2.0);
+		xt[a] = 0.8f * cosf(degToRad * ((float)a / scale) * 3.0);
+		yt[a] = 0.8f * sinf(degToRad * ((float)a / scale) * 2.0);
+		zt[a] = 3.0f * sinf(degToRad * ((float)a / scale));
 	};
 
 	float diffuse[4][4] = {
@@ -232,7 +234,7 @@ int initialiseTestbench()
 	};
 
 	// Create a mesh array with 3 basic vertex buffers.
-	for (int i = 0; i < TOTAL_TRIS; i++) {
+	for (int i = 0; i < TOTAL_OBJECTS; i++) {
 
 		Mesh* m = renderer->makeMesh();
 

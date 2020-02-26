@@ -51,8 +51,6 @@ Dx12Mesh::~Dx12Mesh()
 
 void Dx12Mesh::Update(Camera* camera)
 {
-	rotateMesh(float3({ 0.001f, 0.0f, 0.0f }));
-
 	// Create the world matrix
 	DirectX::XMVECTOR tmpVec;
 	DirectX::XMMATRIX tmpMat;
