@@ -52,13 +52,13 @@ public:
 	unsigned int clearFlags;
 
 	Camera* makeCamera(unsigned int width, unsigned int height);
-	Material* makeMaterial(const std::string& name);
+	Material* makeMaterial();
 	Mesh* makeMesh();
 	VertexBuffer* makeVertexBuffer(size_t size, int numEntries);
 	Texture2D* makeTexture2D();
 	Sampler2D* makeSampler2D();
 	RenderState* makeRenderState();
-	ConstantBuffer* makeConstantBuffer(std::string NAME, unsigned int location);
+	ConstantBuffer* makeConstantBuffer(unsigned int location);
 	Technique* makeTechnique(Material*, RenderState*);
 	void setResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList, ID3D12Resource* resource,
 		D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter);
@@ -66,7 +66,7 @@ public:
 	int initialize(unsigned int width, unsigned int height);
 	void setWinTitle(const char* title);
 	void present();	// Swap buffers
-	int shutdown() { return -1;	};
+	int shutdown();
 
 	void setClearColor(float r, float g, float b, float a);
 	void clearBuffer(unsigned int flags);

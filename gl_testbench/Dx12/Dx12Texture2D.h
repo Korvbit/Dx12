@@ -19,6 +19,7 @@ public:
 
 	int loadFromFile(std::string filename);
 	ID3D12DescriptorHeap* getDescriptorHeap();
+	ID3D12DescriptorHeap* getNullDescriptorHeap();
 
 	BYTE* imageData;
 	D3D12_RESOURCE_DESC resourceDesc;
@@ -32,6 +33,7 @@ private:
 	ID3D12Resource* textureBuffer;
 	ID3D12Resource* textureBufferUploadHeap;
 	ID3D12DescriptorHeap* descriptorHeap;
+	ID3D12DescriptorHeap* nullDescriptorHeap;
 	ID3D12Fence* fence;
 	UINT64 fenceValue;
 	HANDLE fenceEvent;

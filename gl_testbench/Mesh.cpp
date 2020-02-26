@@ -31,7 +31,4 @@ void Mesh::addTexture(Texture2D* texture, unsigned int slot)
 
 Mesh::~Mesh()
 {
-	for (auto g : geometryBuffers) {
-		g.second.buffer->decRef();
-	}
 }

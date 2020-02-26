@@ -2,27 +2,26 @@
 
 Dx12Renderer::Dx12Renderer()
 {
+	rootSignature = nullptr;
+
+	device = nullptr;
+	rtvDescriptorHeap = nullptr;
+	dsDescriptorHeap = nullptr;
+	depthStencilBuffer = nullptr;
+	commandQueue = nullptr;
+	commandList = nullptr;
+	swapChain = nullptr;
+
+	for (int i = 0; i < frameBufferCount; i++) {
+		renderTargets[i] = nullptr;
+		commandAllocator[i] = nullptr;
+		fence[i] = nullptr;
+	}
 }
 
 Dx12Renderer::~Dx12Renderer()
 {
-	//std::unordered_map<Technique*, std::vector<Mesh*>> drawList;
-
-	rootSignature->Release();
-
-	device->Release();
-	rtvDescriptorHeap->Release();
-	dsDescriptorHeap->Release();
-	depthStencilBuffer->Release();
-	commandQueue->Release();
-	commandList->Release();
-	swapChain->Release();
-
-	for (int i = 0; i < frameBufferCount; i++) {
-		renderTargets[i]->Release();
-		commandAllocator[i]->Release();
-		fence[i]->Release();
-	}
+	shutdown();
 }
 
 Camera * Dx12Renderer::makeCamera(unsigned int width, unsigned int height)
@@ -30,9 +29,9 @@ Camera * Dx12Renderer::makeCamera(unsigned int width, unsigned int height)
 	return new Dx12Camera(width, height);
 }
 
-Material * Dx12Renderer::makeMaterial(const std::string & name)
+Material * Dx12Renderer::makeMaterial()
 {
-	return new Dx12Material(name, device);
+	return new Dx12Material(device);
 }
 
 Mesh * Dx12Renderer::makeMesh()
@@ -63,9 +62,9 @@ RenderState * Dx12Renderer::makeRenderState()
 	return newRS;
 }
 
-ConstantBuffer * Dx12Renderer::makeConstantBuffer(std::string NAME, unsigned int location)
+ConstantBuffer * Dx12Renderer::makeConstantBuffer(unsigned int location)
 {
-	return new Dx12ConstantBuffer(NAME, location, device);
+	return new Dx12ConstantBuffer(location, device);
 }
 
 Technique * Dx12Renderer::makeTechnique(Material* m, RenderState* r)
@@ -127,15 +126,22 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	else {	// If we did not find a compatible device we create a "warp device"
 		factory->EnumWarpAdapter(IID_PPV_ARGS(&adapter));
 		D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
+
+		SafeRelease(&adapter);
 	}
+	device->SetName(L"Device");
 
 	// Create the command queue
 	D3D12_COMMAND_QUEUE_DESC cqd = {};
 	device->CreateCommandQueue(&cqd, IID_PPV_ARGS(&commandQueue));
+	commandQueue->SetName(L"Command Queue");
 
 	// Create command allocators
 	for (int i = 0; i < frameBufferCount; ++i)
+	{
 		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator[i]));
+		commandAllocator[i]->SetName(L"CommandAllocator");
+	}
 
 	// Create command lists
 	device->CreateCommandList(
@@ -144,12 +150,13 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		commandAllocator[0],
 		nullptr,
 		IID_PPV_ARGS(&commandList));
-
+	commandList->SetName(L"CommandList");
 
 	// Create fences
 	for (int i = 0; i < frameBufferCount; ++i)
 	{
 		device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence[i]));
+		fence[i]->SetName(L"Fence");
 		fenceValue[i] = 1;
 		fenceEvent = CreateEvent(0, false, false, 0);
 	}
@@ -159,7 +166,6 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	CreateDXGIFactory(IID_PPV_ARGS(&factory));
 
 	// Create swapchain
-	IDXGISwapChain1* swapChain1 = nullptr;
 	
 	DXGI_SWAP_CHAIN_DESC1 scDesc = {};
 	scDesc.Width = 0;
@@ -186,13 +192,13 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
-
 	// Create render target descriptors
 	D3D12_DESCRIPTOR_HEAP_DESC dhd = {};
 	dhd.NumDescriptors = frameBufferCount;
 	dhd.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 
 	device->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&rtvDescriptorHeap));
+	rtvDescriptorHeap->SetName(L"RTVDescriptorHeap");
 
 	rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	D3D12_CPU_DESCRIPTOR_HANDLE cdh = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
@@ -202,6 +208,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		swapChain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i]));
 		device->CreateRenderTargetView(renderTargets[i], nullptr, cdh);
 		cdh.ptr += rtvDescriptorSize;
+		renderTargets[i]->SetName(L"RenderTarget");
 	}
 
 	// Create depth stencil
@@ -249,6 +256,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	dsDescriptorHeap->SetName(L"Depth/Stencil Resource Heap");
 
 	device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	depthStencilBuffer->SetName(L"DepthStencilBuffer");
 	#pragma endregion
 
 	// Initialize the viewport
@@ -326,6 +334,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
 
 	device->CreateRootSignature(0, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+	rootSignature->SetName(L"RootSignature");
 
 	// Create constant buffer ================================================
 
@@ -354,6 +363,27 @@ void Dx12Renderer::present()
 
 	WaitForGpu(); //Wait for GPU to finish.
 				  //NOT BEST PRACTICE, only used as such for simplicity.
+}
+
+int Dx12Renderer::shutdown()
+{
+	SafeRelease(&rootSignature);
+
+	SafeRelease(&device);
+	SafeRelease(&rtvDescriptorHeap);
+	SafeRelease(&dsDescriptorHeap);
+	SafeRelease(&depthStencilBuffer);
+	SafeRelease(&commandQueue);
+	SafeRelease(&commandList);
+	SafeRelease(&swapChain);
+
+	for (int i = 0; i < frameBufferCount; i++) {
+		SafeRelease(&renderTargets[i]);
+		SafeRelease(&commandAllocator[i]);
+		SafeRelease(&fence[i]);
+	}
+
+	return 1;
 }
 
 void Dx12Renderer::setClearColor(float r, float g, float b, float a)
@@ -410,15 +440,15 @@ void Dx12Renderer::frame()
 	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	Dx12Material* material;
-	Dx12RenderState* renderState;
-	Dx12Texture2D* texture;
-	Dx12Sampler2D* sampler;
-	Dx12VertexBuffer* vBuffer;
-	Dx12VertexBuffer* nBuffer;
-	Dx12VertexBuffer* uBuffer;
-	Dx12IndexBuffer* iBuffer;
-	Dx12ConstantBuffer* cBuffer;
+	Dx12Material* material = nullptr;
+	Dx12RenderState* renderState = nullptr;
+	Dx12Texture2D* texture = nullptr;
+	Dx12Sampler2D* sampler = nullptr;
+	Dx12VertexBuffer* vBuffer = nullptr;
+	Dx12VertexBuffer* nBuffer = nullptr;
+	Dx12VertexBuffer* uBuffer = nullptr;
+	Dx12IndexBuffer* iBuffer = nullptr;
+	Dx12ConstantBuffer* cBuffer = nullptr;
 
 	for (auto work : drawList)
 	{
@@ -452,8 +482,16 @@ void Dx12Renderer::frame()
 
 			cBuffer = (Dx12ConstantBuffer*)(mesh->wvpBuffer);
 			commandList->SetGraphicsRootConstantBufferView(2, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
-			//commandList->DrawInstanced(numberElements, 1, 0, 0);
 			commandList->DrawIndexedInstanced(numberIndices, 1, 0, 0, 0);
+			for (auto t : mesh->textures)
+			{
+				texture = (Dx12Texture2D*)(t.second);
+				
+				ID3D12DescriptorHeap* descriptorHeaps[] = { texture->getNullDescriptorHeap() };
+				commandList->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
+
+				commandList->SetGraphicsRootDescriptorTable(0, texture->getNullDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+			}
 		}
 	}
 
@@ -532,7 +570,7 @@ bool Dx12Renderer::initializeWindow(HINSTANCE hInstance, int width, int height, 
 	ShowWindow(hwnd, SW_SHOW);
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
 	UpdateWindow(hwnd);
-
+	
 	return true;
 }
 

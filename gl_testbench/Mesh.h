@@ -13,7 +13,7 @@ class Mesh
 {
 public:
 	Mesh();
-	~Mesh();
+	virtual ~Mesh();
 
 	virtual void createMesh(float* meshPos, float* meshNor, float* meshUV, unsigned long* meshInd, size_t numVert, size_t numInd) = 0;
 	virtual void createCube() = 0;

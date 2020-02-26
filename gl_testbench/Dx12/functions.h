@@ -8,3 +8,11 @@ template <class T> void SafeRelease(T **ppT)
 		*ppT = NULL;
 	}
 }
+
+template<typename T>
+inline void freeContainer(T& p_container)
+{
+	T empty;
+	using std::swap;
+	swap(p_container, empty);
+}

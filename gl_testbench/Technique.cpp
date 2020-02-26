@@ -4,6 +4,11 @@
 
 Technique::~Technique()
 {
+	if (renderState)
+	{
+		delete renderState;
+		renderState = nullptr;
+	}
 	std::cout << "destroyed technique" << std::endl;
 }
 

@@ -12,6 +12,7 @@ Dx12Texture2D::Dx12Texture2D(ID3D12Device* rendererDevice, ID3D12GraphicsCommand
 	heapDescriptorDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	heapDescriptorDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	device->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&descriptorHeap));
+	device->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&nullDescriptorHeap));
 
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	fenceValue = 1;
@@ -25,6 +26,7 @@ Dx12Texture2D::~Dx12Texture2D()
 	textureBuffer->Release();
 	textureBufferUploadHeap->Release();
 	descriptorHeap->Release();
+	nullDescriptorHeap->Release();
 	fence->Release();
 }
 
@@ -155,6 +157,7 @@ int Dx12Texture2D::loadFromFile(std::string filename)
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
 	device->CreateShaderResourceView(textureBuffer, &srvDesc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	device->CreateShaderResourceView(nullptr, &srvDesc, nullDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 	commandList->Close();
 	ID3D12CommandList* ppCommandLists[] = { commandList };
@@ -177,6 +180,11 @@ int Dx12Texture2D::loadFromFile(std::string filename)
 ID3D12DescriptorHeap * Dx12Texture2D::getDescriptorHeap()
 {
 	return descriptorHeap;
+}
+
+ID3D12DescriptorHeap * Dx12Texture2D::getNullDescriptorHeap()
+{
+	return nullDescriptorHeap;
 }
 
 // get the dxgi format equivilent of a wic format

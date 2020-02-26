@@ -5,12 +5,9 @@ Dx12Camera::Dx12Camera(int screenWidth, int screenHeight)
 	m_screenWidth = screenWidth;
 	m_screenHeight = screenHeight;
 
-	//position = { 0.0f, 2.0f, -4.0f, 0.0f };
 	position = { 0.0f, 0.0f, -4.0f, 0.0f};
 	target = { 0.0f, 0.0f, 0.0f, 0.0f };
 	up = { 0.0f, 1.0f, 0.0f, 0.0f };
-
-
 
 	// Create projection matrix
 	DirectX::XMMATRIX tmpMat = DirectX::XMMatrixPerspectiveFovLH(45.0f*(3.14f / 180.0f), (float)screenWidth / (float)screenHeight, 0.1f, 1000.0f);

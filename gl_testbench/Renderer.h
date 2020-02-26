@@ -32,13 +32,13 @@ public:
 	*/
 	static Renderer* makeRenderer(BACKEND backend);
 	virtual Camera* makeCamera(unsigned int width, unsigned int height) = 0;
-	virtual Material* makeMaterial(const std::string& name) = 0;
+	virtual Material* makeMaterial() = 0;
 	virtual Mesh* makeMesh() = 0;
 	virtual VertexBuffer* makeVertexBuffer(size_t size, int numEntries) = 0;
 	virtual Texture2D* makeTexture2D() = 0;
 	virtual Sampler2D* makeSampler2D() = 0;
 	virtual RenderState* makeRenderState() = 0;
-	virtual ConstantBuffer* makeConstantBuffer(std::string NAME, unsigned int location) = 0;
+	virtual ConstantBuffer* makeConstantBuffer(unsigned int location) = 0;
 	virtual Technique* makeTechnique(Material*, RenderState*) = 0;
 
 	Renderer() { /*InitializeCriticalSection(&protectHere);*/ };

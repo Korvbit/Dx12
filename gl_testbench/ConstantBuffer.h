@@ -5,7 +5,7 @@
 class ConstantBuffer
 {
 public:
-	ConstantBuffer(std::string NAME, unsigned int location) {};
+	ConstantBuffer(unsigned int location) {};
 	virtual ~ConstantBuffer() = 0;
 	// set data will update the buffer associated, including whatever is necessary to
 	// update the GPU memory.

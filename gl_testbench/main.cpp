@@ -12,6 +12,8 @@
 #include "Dx12/functions.h"
 #include "Camera.h"
 
+//#include "vld.h"
+
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
@@ -58,8 +60,8 @@ void updateDelta()
 	gLastDelta = (lastSum / WINDOW_SIZE);
 };
 
-// TOTAL_TRIS pretty much decides how many drawcalls in a brute force approach.
-constexpr int TOTAL_OBJECTS = 80;
+// TOTAL_OBJECTS pretty much decides how many drawcalls in a brute force approach.
+constexpr int TOTAL_OBJECTS = 40;
 // this has to do with how the triangles are spread in the screen, not important.
 constexpr int TOTAL_PLACES = 8000;
 float xt[TOTAL_PLACES], yt[TOTAL_PLACES], zt[TOTAL_PLACES];
@@ -140,13 +142,13 @@ int initialiseTestbench()
 	for (int i = 0; i < 4; i++)
 	{
 		// set material name from text file?
-		Material* m = renderer->makeMaterial("material_" + std::to_string(i));
+		Material* m = renderer->makeMaterial();
 
 		std::string err;
 		m->compileMaterial(err);
 
 		// add a constant buffer to the material, to tint every triangle using this material
-		m->addConstantBuffer(DIFFUSE_TINT_NAME, DIFFUSE_TINT);
+		m->addConstantBuffer(DIFFUSE_TINT);
 		// no need to update anymore
 		// when material is bound, this buffer should be also bound for access.
 
@@ -158,13 +160,12 @@ int initialiseTestbench()
 	// one technique with wireframe
 	RenderState* renderState1 = renderer->makeRenderState();
 	renderState1->setWireFrame(true);
-	RenderState* renderState2 = renderer->makeRenderState();
 
 	// basic technique
 	techniques.push_back(renderer->makeTechnique(materials[0], renderState1));
-	techniques.push_back(renderer->makeTechnique(materials[1], renderState2));
-	techniques.push_back(renderer->makeTechnique(materials[2], renderState2));
-	techniques.push_back(renderer->makeTechnique(materials[3], renderState2));
+	techniques.push_back(renderer->makeTechnique(materials[1], renderer->makeRenderState()));
+	techniques.push_back(renderer->makeTechnique(materials[2], renderer->makeRenderState()));
+	techniques.push_back(renderer->makeTechnique(materials[3], renderer->makeRenderState()));
 
 	// create texture
 	Texture2D* fatboy = renderer->makeTexture2D();
@@ -177,34 +178,34 @@ int initialiseTestbench()
 	samplers.push_back(sampler);
 
 	float pos[] = {
-							 0.00f,  0.05f,  0.00f, 1.0f,
-							 0.05f, -0.05f, -0.05f, 1.0f,
-							-0.05f, -0.05f, -0.05f, 1.0f,
-							 0.00f,  0.05f,  0.00f, 1.0f,
-							 0.00f,  0.05f,  0.00f, 1.0f,
-							 0.05f, -0.05f,  0.05f, 1.0f,
-							-0.05f, -0.05f,  0.05f, 1.0f,
-							 0.00f,  0.05f,  0.00f, 1.0f,
+		 0.00f,  0.05f,  0.00f, 1.0f,
+		 0.05f, -0.05f, -0.05f, 1.0f,
+		-0.05f, -0.05f, -0.05f, 1.0f,
+		 0.00f,  0.05f,  0.00f, 1.0f,
+		 0.00f,  0.05f,  0.00f, 1.0f,
+		 0.05f, -0.05f,  0.05f, 1.0f,
+		-0.05f, -0.05f,  0.05f, 1.0f,
+		 0.00f,  0.05f,  0.00f, 1.0f,
 	};
 	float nor[] = {
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
 	};
 	float UV[] = {
-							0.50f,  0.00f,
-							1.00f,  1.00f,
-							0.00f,  1.00f,
-							0.50f,  0.00f,
-							0.50f,  0.00f,
-							1.00f,  1.00f,
-							0.00f,  1.00f,
-							0.50f,  0.00f,
+		0.50f,  0.00f,
+		1.00f,  1.00f,
+		0.00f,  1.00f,
+		0.50f,  0.00f,
+		0.50f,  0.00f,
+		1.00f,  1.00f,
+		0.00f,  1.00f,
+		0.50f,  0.00f,
 	};
 
 	DWORD indexList[] = {
@@ -244,10 +245,10 @@ int initialiseTestbench()
 			m->createCube();
 
 		// we can create a constant buffer outside the material, for example as part of the Mesh.
-		m->wvpBuffer = renderer->makeConstantBuffer(std::string(TRANSLATION_NAME), TRANSLATION);
+		m->wvpBuffer = renderer->makeConstantBuffer(TRANSLATION);
 
 		m->technique = techniques[ i % 4 ];
-		if (i % 4 == 2)
+		if (i % 4 == 2 || i % 4 == 3)
 			m->addTexture(textures[0], DIFFUSE_SLOT);
 
 		scene.push_back(m);
@@ -280,6 +281,10 @@ void shutdown() {
 	{
 		delete t;
 	}
+
+	delete camera;
+
+	renderer->shutdown();
 	delete renderer;
 };
 

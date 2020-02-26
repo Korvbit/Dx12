@@ -11,7 +11,7 @@
 class Dx12ConstantBuffer : public ConstantBuffer
 {
 public:
-	Dx12ConstantBuffer(std::string NAME, unsigned int location, ID3D12Device* deviceIn);
+	Dx12ConstantBuffer(unsigned int location, ID3D12Device* deviceIn);
 	~Dx12ConstantBuffer();
 	// set data will update the buffer associated, including whatever is necessary to
 	// update the GPU memory.
@@ -19,7 +19,6 @@ public:
 	ID3D12Resource* getUploadHeap();
 	UINT8* getMappedBuffer();
 	
-	std::string name;
 	unsigned int location;
 
 private:

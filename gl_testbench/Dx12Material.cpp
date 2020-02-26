@@ -1,6 +1,6 @@
 #include "Dx12Material.h"
 
-Dx12Material::Dx12Material(const std::string & name, ID3D12Device* rendererDevice)
+Dx12Material::Dx12Material(ID3D12Device* rendererDevice)
 {
 	device = rendererDevice;
 }
@@ -9,9 +9,7 @@ Dx12Material::~Dx12Material()
 {
 	vertexBlob->Release();
 	pixelBlob->Release();
-
-	std::map<unsigned int, Dx12ConstantBuffer*> constantBuffers;
-
+	
 	for (auto work : constantBuffers)
 	{
 		delete work.second;
@@ -26,9 +24,9 @@ int Dx12Material::compileMaterial(std::string & errString)
 	return 0;
 }
 
-void Dx12Material::addConstantBuffer(std::string name, unsigned int location)
+void Dx12Material::addConstantBuffer(unsigned int location)
 {
-	constantBuffers[location] = new Dx12ConstantBuffer(name, location, device);
+	constantBuffers[location] = new Dx12ConstantBuffer(location, device);
 }
 
 void Dx12Material::updateConstantBuffer(const void * data, size_t size, unsigned int location)

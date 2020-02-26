@@ -31,22 +31,8 @@ Dx12Mesh::~Dx12Mesh()
 	delete uvs;
 	delete ind;
 
-	delete technique;
-
 	// translation buffers
 	delete wvpBuffer;
-	// local copy of the translation
-	delete transform;
-
-	for (auto work : geometryBuffers)
-	{
-		delete work.second.buffer;
-	}
-
-	for (auto work : textures)
-	{
-		delete work.second;
-	}
 }
 
 void Dx12Mesh::Update(Camera* camera)
