@@ -59,7 +59,7 @@ void updateDelta()
 };
 
 // TOTAL_TRIS pretty much decides how many drawcalls in a brute force approach.
-constexpr int TOTAL_OBJECTS = 100;
+constexpr int TOTAL_OBJECTS = 80;
 // this has to do with how the triangles are spread in the screen, not important.
 constexpr int TOTAL_PLACES = 8000;
 float xt[TOTAL_PLACES], yt[TOTAL_PLACES], zt[TOTAL_PLACES];
@@ -84,21 +84,21 @@ void run() {
 */
 void updateScene()
 {
-	static long long shift = 0;
+	static int shift = 0;
 	const int size = scene.size();
 	for (int i = 0; i < size; i++)
 	{
-		scene[i]->rotateMesh(float3({ 0.005f, 0.0f, 0.0f }));
+		scene[i]->rotateMesh(float3({ 0.005f * zt[(i + shift) % (TOTAL_PLACES)], 0.0f, 0.0f }));
 		scene[i]->setTranslation(
 			{
-				xt[(int)(float)((100 * i) + shift) % (TOTAL_PLACES)],
-				yt[(int)(float)((100 * i) + shift) % (TOTAL_PLACES)],
-				zt[(int)(float)((100 * i) + shift) % (TOTAL_PLACES)],
+				xt[((100 * i) + shift) % (TOTAL_PLACES)],
+				yt[((100 * i) + shift) % (TOTAL_PLACES)],
+				zt[((100 * i) + shift) % (TOTAL_PLACES)],
 			}
 		);
 		scene[i]->Update(camera);
 	}
-	shift += 1;
+	++shift;
 	return;
 };
 
