@@ -50,7 +50,6 @@ Dx12ConstantBuffer::~Dx12ConstantBuffer()
 {
 	uploadHeap->Unmap(0, nullptr);
 	uploadHeap->Release();
-	delete mappedBuffer;
 }
 
 void Dx12ConstantBuffer::setData(const void * data, size_t size, Material * m, unsigned int location)

@@ -34,6 +34,7 @@ public:
 	void setRotation(float3 rotation);
 	void setTranslation(float3 translation);
 
+	void createMesh(float* meshPos, float* meshNor, float* meshUV, unsigned long* meshInd, size_t numVert, size_t numInd);
 	void createCube();
 	void createTriangle();
 	void createQuad();

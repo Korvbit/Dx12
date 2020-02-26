@@ -88,8 +88,16 @@ void updateScene()
 	const int size = scene.size();
 	for (int i = 0; i < size; i++)
 	{
+		scene[i]->setTranslation(
+			{
+				xt[(int)(float)((500 * i) + shift) % (TOTAL_PLACES)],
+				yt[(int)(float)((500 * i) + shift) % (TOTAL_PLACES)],
+				i * (-0.1f)
+			}
+		);
 		scene[i]->Update(camera);
 	}
+	shift += 1;
 	return;
 };
 
@@ -119,11 +127,6 @@ int initialiseTestbench()
 		xt[a] = 0.8f * cosf(degToRad * ((float)a/scale) * 3.0);
 		yt[a] = 0.8f * sinf(degToRad * ((float)a/scale) * 2.0);
 	};
-
-	// triangle geometry:
-	float4 triPos[3] = { { 0.0f,  0.05, 0.0f, 1.0f },{ 0.05, -0.05, 0.0f, 1.0f },{ -0.05, -0.05, 0.0f, 1.0f } };
-	float4 triNor[3] = { { 0.0f,  0.0f, 1.0f, 0.0f },{ 0.0f, 0.0f, 1.0f, 0.0f },{ 0.0f, 0.0f, 1.0f, 0.0f } };
-	float2 triUV[3] =  { { 0.5f,  -0.99f },{ 1.49f, 1.1f },{ -0.51, 1.1f } };
 
 	float diffuse[4][4] = {
 		0.0,0.0,1.0,1.0,
@@ -171,14 +174,72 @@ int initialiseTestbench()
 	textures.push_back(fatboy);
 	samplers.push_back(sampler);
 
+	float pos[] = {
+							 0.00f,  0.05f,  0.00f, 1.0f,
+							 0.05f, -0.05f, -0.05f, 1.0f,
+							-0.05f, -0.05f, -0.05f, 1.0f,
+							 0.00f,  0.05f,  0.00f, 1.0f,
+							 0.00f,  0.05f,  0.00f, 1.0f,
+							 0.05f, -0.05f,  0.05f, 1.0f,
+							-0.05f, -0.05f,  0.05f, 1.0f,
+							 0.00f,  0.05f,  0.00f, 1.0f,
+	};
+	float nor[] = {
+							0.0f, 0.0f, 1.0f, 0.0f,
+							0.0f, 0.0f, 1.0f, 0.0f,
+							0.0f, 0.0f, 1.0f, 0.0f,
+							0.0f, 0.0f, 1.0f, 0.0f,
+							0.0f, 0.0f, 1.0f, 0.0f,
+							0.0f, 0.0f, 1.0f, 0.0f,
+							0.0f, 0.0f, 1.0f, 0.0f,
+							0.0f, 0.0f, 1.0f, 0.0f,
+	};
+	float UV[] = {
+							0.50f,  0.00f,
+							1.00f,  1.00f,
+							0.00f,  1.00f,
+							0.50f,  0.00f,
+							0.50f,  0.00f,
+							1.00f,  1.00f,
+							0.00f,  1.00f,
+							0.50f,  0.00f,
+	};
+
+	DWORD indexList[] = {
+		// Front face 
+		0, 1, 2,
+		0, 2, 3,
+
+		// Back face 
+		7, 6, 5,
+		7, 5, 4,
+
+		// Right face 
+		4, 5, 1,
+		4, 1, 0,
+
+		// Left face 
+		3, 2, 6,
+		3, 6, 7,
+
+		// Top face 
+		4, 0, 3,
+		4, 3, 7,
+
+		// Bottom face 
+		1, 5, 6,
+		1, 6, 2,
+	};
+
 	// Create a mesh array with 3 basic vertex buffers.
 	for (int i = 0; i < TOTAL_TRIS; i++) {
 
 		Mesh* m = renderer->makeMesh();
 
-		//m->createTriangle();
-		//m->createQuad();
-		m->createCube();
+		if (i % 2 == 0)
+			m->createMesh(pos, nor, UV, indexList, 8, ARRAYSIZE(indexList));
+		else
+			m->createCube();
 
 		// we can create a constant buffer outside the material, for example as part of the Mesh.
 		m->wvpBuffer = renderer->makeConstantBuffer(std::string(TRANSLATION_NAME), TRANSLATION);

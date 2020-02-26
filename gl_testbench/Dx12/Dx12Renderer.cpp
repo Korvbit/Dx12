@@ -530,6 +530,7 @@ bool Dx12Renderer::initializeWindow(HINSTANCE hInstance, int width, int height, 
 	}
 
 	ShowWindow(hwnd, SW_SHOW);
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
 	UpdateWindow(hwnd);
 
 	return true;

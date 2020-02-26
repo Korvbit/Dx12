@@ -15,6 +15,7 @@ public:
 	Mesh();
 	~Mesh();
 
+	virtual void createMesh(float* meshPos, float* meshNor, float* meshUV, unsigned long* meshInd, size_t numVert, size_t numInd) = 0;
 	virtual void createCube() = 0;
 	virtual void createTriangle() = 0;
 	virtual void createQuad() = 0;
@@ -46,4 +47,13 @@ public:
 	std::unordered_map<unsigned int, Texture2D*> textures;
 
 	virtual void Update(Camera* camera) = 0;
+
+	virtual void scaleMesh(float3 scale) = 0;
+	virtual void rotateMesh(float3 rotate) = 0;
+	virtual void translateMesh(float3 translate) = 0;
+
+	virtual void setScale(float3 scale) = 0;
+	virtual void setRotation(float3 rotation) = 0;
+	virtual void setTranslation(float3 translation) = 0;
+
 };
