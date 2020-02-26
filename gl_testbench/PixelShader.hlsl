@@ -12,14 +12,14 @@ struct PSin {
 
 float4 PS_main(PSin input) : SV_TARGET0 {
 
-	return float4(R, G, B, A) + tex.Sample(samp, input.texCoords);
+	//return float4(R, G, B, A) + tex.Sample(samp, input.texCoords);
 
-	/*if (R != 1.0f || G != 1.0f || B != 1.0f)
+	if (R != 1.0f || G != 1.0f || B != 1.0f)
 	{
 		return float4(R, G, B, A);
 	}
 	else
 	{
 		return tex.Sample(samp, input.texCoords);
-	}*/
+	}
 }

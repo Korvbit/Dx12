@@ -59,9 +59,9 @@ void updateDelta()
 };
 
 // TOTAL_TRIS pretty much decides how many drawcalls in a brute force approach.
-constexpr int TOTAL_OBJECTS = 80;
+constexpr int TOTAL_OBJECTS = 100;
 // this has to do with how the triangles are spread in the screen, not important.
-constexpr int TOTAL_PLACES = 8000;
+constexpr int TOTAL_PLACES = 2000;
 float xt[TOTAL_PLACES], yt[TOTAL_PLACES], zt[TOTAL_PLACES];
 
 
@@ -88,12 +88,12 @@ void updateScene()
 	const int size = scene.size();
 	for (int i = 0; i < size; i++)
 	{
-		scene[i]->rotateMesh(float3({ 0.005f * zt[(i + shift) % (TOTAL_PLACES)], 0.0f, 0.0f }));
+		//scene[i]->rotateMesh(float3({ 0.005f * zt[(i + shift) % (TOTAL_PLACES)], 0.0f, 0.0f }));
 		scene[i]->setTranslation(
 			{
-				xt[((100 * i) + shift) % (TOTAL_PLACES)],
-				yt[((100 * i) + shift) % (TOTAL_PLACES)],
-				zt[((100 * i) + shift) % (TOTAL_PLACES)],
+				xt[((10 * i) + shift) % (TOTAL_PLACES)],
+				yt[((10 * i) + shift) % (TOTAL_PLACES)],
+				zt[((10 * i) + shift) % (TOTAL_PLACES)],
 			}
 		);
 		scene[i]->Update(camera);
@@ -133,7 +133,7 @@ int initialiseTestbench()
 	float diffuse[4][4] = {
 		0.0,0.0,1.0,1.0,
 		0.0,1.0,0.0,1.0,
-		0.0,0.0,0.0,1.0,
+		1.0,1.0,1.0,1.0,
 		1.0,0.0,0.0,1.0
 	};
 
@@ -177,34 +177,34 @@ int initialiseTestbench()
 	samplers.push_back(sampler);
 
 	float pos[] = {
-							 0.00f,  0.05f,  0.00f, 1.0f,
-							 0.05f, -0.05f, -0.05f, 1.0f,
-							-0.05f, -0.05f, -0.05f, 1.0f,
-							 0.00f,  0.05f,  0.00f, 1.0f,
-							 0.00f,  0.05f,  0.00f, 1.0f,
-							 0.05f, -0.05f,  0.05f, 1.0f,
-							-0.05f, -0.05f,  0.05f, 1.0f,
-							 0.00f,  0.05f,  0.00f, 1.0f,
+		 0.00f,  0.05f,  0.00f, 1.0f,
+		 0.05f, -0.05f, -0.05f, 1.0f,
+		-0.05f, -0.05f, -0.05f, 1.0f,
+		 0.00f,  0.05f,  0.00f, 1.0f,
+		 0.00f,  0.05f,  0.00f, 1.0f,
+		 0.05f, -0.05f,  0.05f, 1.0f,
+		-0.05f, -0.05f,  0.05f, 1.0f,
+		 0.00f,  0.05f,  0.00f, 1.0f,
 	};
 	float nor[] = {
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
-							0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
 	};
 	float UV[] = {
-							0.50f,  0.00f,
-							1.00f,  1.00f,
-							0.00f,  1.00f,
-							0.50f,  0.00f,
-							0.50f,  0.00f,
-							1.00f,  1.00f,
-							0.00f,  1.00f,
-							0.50f,  0.00f,
+		 0.50f, -0.99f,
+		 1.49f,  1.10f,
+		-0.51f,  1.10f,
+		 0.50f, -0.99f,
+		 0.50f, -0.99f,
+		 1.49f,  1.10f,
+		-0.51f,  1.10f,
+		 0.50f, -0.99f,
 	};
 
 	DWORD indexList[] = {
@@ -238,10 +238,10 @@ int initialiseTestbench()
 
 		Mesh* m = renderer->makeMesh();
 
-		if (i % 2 == 0)
+		//if (i % 2 == 0)
 			m->createMesh(pos, nor, UV, indexList, 8, ARRAYSIZE(indexList));
-		else
-			m->createCube();
+		//else
+			//m->createCube();
 
 		// we can create a constant buffer outside the material, for example as part of the Mesh.
 		m->wvpBuffer = renderer->makeConstantBuffer(std::string(TRANSLATION_NAME), TRANSLATION);
