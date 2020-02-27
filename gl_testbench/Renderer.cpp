@@ -7,3 +7,6 @@ Renderer* Renderer::makeRenderer(BACKEND option)
 	return new Dx12Renderer();
 }
 
+Renderer::~Renderer()
+{
+}

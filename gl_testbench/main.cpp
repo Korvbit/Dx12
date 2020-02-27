@@ -12,7 +12,7 @@
 #include "Dx12/functions.h"
 #include "Camera.h"
 
-//#include "vld.h"
+#include "vld.h"
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
@@ -284,7 +284,6 @@ void shutdown() {
 
 	delete camera;
 
-	renderer->shutdown();
 	delete renderer;
 };
 

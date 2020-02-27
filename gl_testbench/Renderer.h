@@ -40,8 +40,10 @@ public:
 	virtual RenderState* makeRenderState() = 0;
 	virtual ConstantBuffer* makeConstantBuffer(unsigned int location) = 0;
 	virtual Technique* makeTechnique(Material*, RenderState*) = 0;
+	std::unordered_map<Technique*, std::vector<Mesh*>> drawList;
 
 	Renderer() { /*InitializeCriticalSection(&protectHere);*/ };
+	virtual ~Renderer();
 	virtual int initialize(unsigned int width, unsigned int height) = 0;
 	virtual void setWinTitle(const char* title) = 0;
 	virtual void present() = 0;

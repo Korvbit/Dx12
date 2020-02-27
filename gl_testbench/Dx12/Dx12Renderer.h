@@ -48,7 +48,6 @@ public:
 	UINT64 fenceValue[frameBufferCount];
 	HANDLE fenceEvent;
 	IDXGISwapChain3* swapChain;
-	std::unordered_map<Technique*, std::vector<Mesh*>> drawList;
 	unsigned int clearFlags;
 
 	Camera* makeCamera(unsigned int width, unsigned int height);

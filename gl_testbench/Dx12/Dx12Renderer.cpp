@@ -495,6 +495,10 @@ void Dx12Renderer::frame()
 		}
 	}
 
+	for (auto work : drawList)
+	{
+		work.second.clear();
+	}
 	drawList.clear();
 
 	setResourceTransitionBarrier(commandList,
