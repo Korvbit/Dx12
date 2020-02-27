@@ -76,6 +76,31 @@ void run() {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
+
+		if (WM_KEYDOWN == msg.message)
+		{
+			switch (msg.wParam)
+			{
+			case KEY_A:
+				camera->move({ -0.1f, 0.0f, 0.0f });
+				break;
+
+			case KEY_D:
+				camera->move({ 0.1f, 0.0f, 0.0f });
+				break;
+
+			case KEY_W:
+				camera->move({ 0.0f, 0.0f, 0.1f });
+				break;
+
+			case KEY_S:
+				camera->move({ 0.0f, 0.0f, -0.1f});
+				break;
+
+			default:
+				break;
+			}
+		}
 		updateScene();
 		renderScene();
 	}
@@ -86,6 +111,7 @@ void run() {
 */
 void updateScene()
 {
+	camera->Update();
 	static int shift = 0;
 	const int size = scene.size();
 	for (int i = 0; i < size; i++)

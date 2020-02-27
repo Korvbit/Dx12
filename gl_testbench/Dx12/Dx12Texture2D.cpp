@@ -12,11 +12,8 @@ Dx12Texture2D::Dx12Texture2D(ID3D12Device* rendererDevice, ID3D12GraphicsCommand
 	heapDescriptorDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	heapDescriptorDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	device->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&descriptorHeap));
+	// Create null descriptor heap to be able to unbind texture
 	device->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&nullDescriptorHeap));
-
-	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
-	fenceValue = 1;
-	fenceEvent = CreateEvent(0, false, false, 0);
 }
 
 Dx12Texture2D::~Dx12Texture2D()
@@ -27,7 +24,6 @@ Dx12Texture2D::~Dx12Texture2D()
 	textureBufferUploadHeap->Release();
 	descriptorHeap->Release();
 	nullDescriptorHeap->Release();
-	fence->Release();
 }
 
 int Dx12Texture2D::loadFromFile(std::string filename)
@@ -162,17 +158,6 @@ int Dx12Texture2D::loadFromFile(std::string filename)
 	commandList->Close();
 	ID3D12CommandList* ppCommandLists[] = { commandList };
 	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
-	// Signal when the fence has increased in value
-	const UINT64 signalValue = fenceValue;
-	commandQueue->Signal(fence, signalValue);
-	fenceValue++; // Increment the comparison value inbefore the next call
-
-	// Wait until the value has been incremented
-	if (fence->GetCompletedValue() < signalValue) {
-		fence->SetEventOnCompletion(signalValue, fenceEvent);
-		WaitForSingleObject(fenceEvent, INFINITE);
-	}
 
 	return imageSize;
 }

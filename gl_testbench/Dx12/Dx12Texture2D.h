@@ -34,9 +34,6 @@ private:
 	ID3D12Resource* textureBufferUploadHeap;
 	ID3D12DescriptorHeap* descriptorHeap;
 	ID3D12DescriptorHeap* nullDescriptorHeap;
-	ID3D12Fence* fence;
-	UINT64 fenceValue;
-	HANDLE fenceEvent;
 };
 
 DXGI_FORMAT GetDXGIFormatFromWICFormat(WICPixelFormatGUID& wicFormatGUID);

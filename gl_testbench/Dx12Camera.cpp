@@ -25,6 +25,26 @@ Dx12Camera::~Dx12Camera()
 {
 }
 
+void Dx12Camera::move(float3 direction)
+{
+	position.x += direction.x;
+	position.y += direction.y;
+	position.z += direction.z;
+	target.x += direction.x;
+	target.y += direction.y;
+	target.z += direction.z;
+}
+
 void Dx12Camera::Update()
 {
+	// Create projection matrix
+	DirectX::XMMATRIX tmpMat = DirectX::XMMatrixPerspectiveFovLH(45.0f*(3.14f / 180.0f), (float)m_screenWidth / (float)m_screenHeight, 0.1f, 1000.0f);
+	DirectX::XMStoreFloat4x4(&projectionMatrix, tmpMat);
+
+	// Create view matrix
+	DirectX::XMVECTOR cPos = DirectX::XMLoadFloat4(&position);
+	DirectX::XMVECTOR cTarg = DirectX::XMLoadFloat4(&target);
+	DirectX::XMVECTOR cUp = DirectX::XMLoadFloat4(&up);
+	tmpMat = DirectX::XMMatrixLookAtLH(cPos, cTarg, cUp);
+	XMStoreFloat4x4(&viewMatrix, tmpMat);
 }
