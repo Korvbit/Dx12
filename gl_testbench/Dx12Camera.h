@@ -15,6 +15,5 @@ public:
 	DirectX::XMFLOAT4 target;
 	DirectX::XMFLOAT4 up;
 
-	DirectX::XMFLOAT4X4 projectionMatrix;
-	DirectX::XMFLOAT4X4 viewMatrix;
+	DirectX::XMFLOAT4X4 vpMatrix;
 };

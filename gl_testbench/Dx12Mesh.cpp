@@ -55,7 +55,7 @@ void Dx12Mesh::Update(Camera* camera)
 	DirectX::XMStoreFloat4x4(&worldMatrix, tmpMat);
 
 	// Create wvpMatrix
-	tmpMat *= DirectX::XMLoadFloat4x4(&((Dx12Camera*)camera)->viewMatrix) * DirectX::XMLoadFloat4x4(&((Dx12Camera*)camera)->projectionMatrix);
+	tmpMat *= DirectX::XMLoadFloat4x4(&((Dx12Camera*)camera)->vpMatrix);
 
 	DirectX::XMFLOAT4X4 wvpMatrix;
 	DirectX::XMStoreFloat4x4(&wvpMatrix, DirectX::XMMatrixTranspose(tmpMat));
