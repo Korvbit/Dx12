@@ -26,7 +26,6 @@ public:
 	float clearColor[4];
 	int direction = 1;
 
-	HWND hwnd = NULL;
 	LPCTSTR WindowName = L"temp";
 	LPCTSTR WindowTitle = L"temp";
 

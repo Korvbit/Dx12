@@ -11,6 +11,7 @@
 #include <math.h>
 #include "Dx12/functions.h"
 #include "Camera.h"
+#include <windowsx.h>
 
 //#include "vld.h"
 
@@ -37,27 +38,23 @@ void renderScene();
 
 char gTitleBuff[256];
 double gLastDelta = 0.0;
+float dt = 0.0f;
+float fpsCounter = 0.0f;
+int frameCounter = 0;
+int fps = 0;
+POINT center = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
 
 void updateDelta()
 {
-	#define WINDOW_SIZE 10
 	static LARGE_INTEGER start;
 	static LARGE_INTEGER last;
 	static LARGE_INTEGER frequency;
 	QueryPerformanceFrequency(&frequency);
-	static double avg[WINDOW_SIZE] = { 0.0 };
-	static double lastSum = 10.0;
-	static int loop = 0;
 
 	last = start;
 	QueryPerformanceCounter(&start);
-	double deltaTime = (double)(start.QuadPart - last.QuadPart) * 1000 / frequency.QuadPart;
-	// moving average window of WINDOWS_SIZE
-	lastSum -= avg[loop];
-	lastSum += deltaTime;
-	avg[loop] = deltaTime;
-	loop = (loop + 1) % WINDOW_SIZE;
-	gLastDelta = (lastSum / WINDOW_SIZE);
+	dt = (float)(start.QuadPart - last.QuadPart) / frequency.QuadPart;
+	gLastDelta = dt * 1000;
 };
 
 // TOTAL_OBJECTS pretty much decides how many drawcalls in a brute force approach.
@@ -69,37 +66,32 @@ float xt[TOTAL_PLACES], yt[TOTAL_PLACES], zt[TOTAL_PLACES];
 
 void run() {
 	MSG msg = { 0 };
-	while (WM_QUIT != msg.message)
+	while (msg.message != WM_QUIT)
 	{
 		if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-
-		if (WM_KEYDOWN == msg.message)
+		if (msg.message == WM_MOUSEMOVE)
 		{
-			switch (msg.wParam)
-			{
-			case KEY_A:
-				camera->move({ -0.1f, 0.0f, 0.0f });
-				break;
+			POINT pos;
+			pos.x = GET_X_LPARAM(msg.lParam);
+			pos.y = GET_Y_LPARAM(msg.lParam);
+			ClientToScreen(renderer->hwnd, &pos);
 
-			case KEY_D:
-				camera->move({ 0.1f, 0.0f, 0.0f });
-				break;
-
-			case KEY_W:
-				camera->move({ 0.0f, 0.0f, 0.1f });
-				break;
-
-			case KEY_S:
-				camera->move({ 0.0f, 0.0f, -0.1f});
-				break;
-
-			default:
-				break;
-			}
+			int diffX = pos.x - center.x;
+			int diffY = pos.y - center.y;
+			camera->rotate(diffX, diffY);
+			SetCursorPos(center.x, center.y);
+		}
+		if (msg.message == WM_KEYDOWN)
+		{
+			camera->startMove(msg.wParam);
+		}
+		if (msg.message == WM_KEYUP)
+		{
+			camera->endMove(msg.wParam);
 		}
 		updateScene();
 		renderScene();
@@ -111,12 +103,12 @@ void run() {
 */
 void updateScene()
 {
-	camera->Update();
+	camera->Update(dt);
 	static int shift = 0;
 	const int size = scene.size();
 	for (int i = 0; i < size; i++)
 	{
-		scene[i]->rotateMesh(float3({ 0.005f * zt[(i + shift) % (TOTAL_PLACES)], 0.0f, 0.0f }));
+		scene[i]->rotateMesh(float3({ 0.0f, 0.005f * zt[(i + shift) % (TOTAL_PLACES)], 0.0f }));
 		scene[i]->setTranslation(
 			{
 				xt[((100 * i) + shift) % (TOTAL_PLACES)],
@@ -127,6 +119,15 @@ void updateScene()
 		scene[i]->Update(camera);
 	}
 	++shift;
+
+	++frameCounter;
+	fpsCounter += dt;
+
+	if (fpsCounter > 0.2) {
+		fps = (int)round(frameCounter / fpsCounter);
+		fpsCounter = frameCounter = 0;
+	}
+
 	return;
 };
 
@@ -141,14 +142,15 @@ void renderScene()
 	renderer->frame();
 	renderer->present();
 	updateDelta();
-	sprintf(gTitleBuff, "DirectX 12 - %3.0lf", gLastDelta);
+	sprintf(gTitleBuff, "DirectX 12 - %.2f", gLastDelta);
 	renderer->setWinTitle(gTitleBuff);
 }
 
 int initialiseTestbench()
 {
-	camera = renderer->makeCamera(SCREEN_WIDTH, SCREEN_HEIGHT);
+	ClientToScreen(renderer->hwnd, &center);
 
+	camera = renderer->makeCamera(SCREEN_WIDTH, SCREEN_HEIGHT);
 	float degToRad = M_PI / 180.0;
 	float scale = (float)TOTAL_PLACES / 359.9;
 	for (int a = 0; a < TOTAL_PLACES; a++)

@@ -574,6 +574,17 @@ bool Dx12Renderer::initializeWindow(HINSTANCE hInstance, int width, int height, 
 	ShowWindow(hwnd, SW_SHOW);
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
 	UpdateWindow(hwnd);
+
+	RECT rcClip;
+	GetWindowRect(hwnd, &rcClip);
+	ClipCursor(&rcClip);
+
+	POINT pos;
+	pos.x = width / 2;
+	pos.y = height / 2;
+	ClientToScreen(hwnd, &pos);
+	SetCursorPos(pos.x, pos.y);
+	ShowCursor(false);
 	
 	return true;
 }

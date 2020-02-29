@@ -55,5 +55,7 @@ public:
 	virtual void submit(Mesh* mesh) = 0;
 	virtual void frame() = 0;
 	
+	HWND hwnd = NULL;
+
 	BACKEND IMPL;
 };

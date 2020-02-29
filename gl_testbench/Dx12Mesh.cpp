@@ -47,6 +47,7 @@ void Dx12Mesh::Update(Camera* camera)
 	// Rotate
 	tmpVec = DirectX::XMLoadFloat4(&this->rotationQuat);
 	tmpMat *= DirectX::XMMatrixRotationQuaternion(tmpVec);
+	
 	// Translate
 	tmpVec = DirectX::XMLoadFloat3(&this->translation);
 	tmpMat *= DirectX::XMMatrixTranslationFromVector(tmpVec);
@@ -75,7 +76,7 @@ void Dx12Mesh::scaleMesh(float3 scale)
 void Dx12Mesh::rotateMesh(float3 rotate)
 {
 	DirectX::XMVECTOR tmpVec;
-	tmpVec = DirectX::XMQuaternionMultiply(DirectX::XMLoadFloat4(&this->rotationQuat), XMQuaternionRotationRollPitchYaw(rotate.z, rotate.x, rotate.y));
+	tmpVec = DirectX::XMQuaternionNormalize(DirectX::XMQuaternionMultiply(DirectX::XMLoadFloat4(&this->rotationQuat), XMQuaternionRotationRollPitchYaw(rotate.x, rotate.y, rotate.z)));
 	DirectX::XMStoreFloat4(&this->rotationQuat, tmpVec);
 }
 
@@ -94,7 +95,7 @@ void Dx12Mesh::setScale(float3 scale)
 
 void Dx12Mesh::setRotation(float3 rotation)
 {
-	DirectX::XMStoreFloat4(&this->rotationQuat, XMQuaternionRotationRollPitchYaw(rotation.z, rotation.x, rotation.y));
+	DirectX::XMStoreFloat4(&this->rotationQuat, XMQuaternionNormalize(XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z)));
 }
 
 void Dx12Mesh::setTranslation(float3 translation)
