@@ -22,7 +22,7 @@ Dx12Camera::Dx12Camera(int screenWidth, int screenHeight)
 	stepR = 0;
 	stepU = 0;
 	stepD = 0;
-	speed = 10;
+	speed = FAST_SPEED;
 }
 
 Dx12Camera::~Dx12Camera()
@@ -58,7 +58,7 @@ void Dx12Camera::startMove(WPARAM key)
 		break;
 
 	case VK_SHIFT:
-		speed = 1;
+		speed = SLOW_SPEED;
 		break;
 
 	default:
@@ -95,7 +95,7 @@ void Dx12Camera::endMove(WPARAM key)
 		break;
 
 	case VK_SHIFT:
-		speed = 10;
+		speed = FAST_SPEED;
 		break;
 
 	case VK_SPACE:

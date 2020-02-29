@@ -3,6 +3,9 @@
 #include <DirectXMath.h>
 #include "Dx12/functions.h"
 
+#define FAST_SPEED 6
+#define SLOW_SPEED 2
+
 class Dx12Camera : public Camera 
 {
 public:
