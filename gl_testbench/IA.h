@@ -1,8 +1,8 @@
 #pragma once
-#define POSITION 0
-#define NORMAL 1
-#define TEXCOORD 2
-#define INDEXBUFF 4
+#define NORMAL 0
+#define TEXCOORD 1
+#define INDEXBUFF 2
+#define POSITION 3
 
 #define TRANSLATION 5
 

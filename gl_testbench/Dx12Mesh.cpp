@@ -1,5 +1,4 @@
 #include "Dx12Mesh.h"
-
 using namespace DirectX;
 
 Dx12Mesh::Dx12Mesh(ID3D12Device* rendererDevice, float3 translate, float3 rotate, float3 scale)
@@ -101,6 +100,38 @@ void Dx12Mesh::setRotation(float3 rotation)
 void Dx12Mesh::setTranslation(float3 translation)
 {
 	this->translation = DirectX::XMFLOAT3(translation.x, translation.y, translation.z);
+}
+
+void Dx12Mesh::createMeshFromObj(const wchar_t * filename)
+{
+	WaveFrontReader<DWORD> objLoader;
+	objLoader.Load((const wchar_t*)filename);
+	std::vector<DirectX::XMFLOAT4> objPos;
+	std::vector<DirectX::XMFLOAT4> objNor;
+	std::vector<DirectX::XMFLOAT2> objUV;
+	std::vector<DWORD> objInd = objLoader.indices;
+
+	for (auto work : objLoader.vertices)
+	{
+		objPos.push_back(DirectX::XMFLOAT4(work.position.x, work.position.y, work.position.z, 1.0f));
+		objNor.push_back(DirectX::XMFLOAT4(work.normal.x, work.normal.y, work.normal.z, 0.0f));
+		objUV.push_back(work.textureCoordinate);
+	}
+
+	pos = new Dx12VertexBuffer(sizeof(DirectX::XMFLOAT4) * objPos.size(), objPos.size(), device);
+	nor = new Dx12VertexBuffer(sizeof(DirectX::XMFLOAT4) * objNor.size(), objNor.size(), device);
+	uvs = new Dx12VertexBuffer(sizeof(DirectX::XMFLOAT2) * objUV.size(), objUV.size(), device);
+	ind = new Dx12IndexBuffer(sizeof(DWORD) * objInd.size(), objInd.size(), device);
+
+	pos->setData(&objPos[0], sizeof(DirectX::XMFLOAT4) * objPos.size(), 0);
+	nor->setData(&objNor[0], sizeof(DirectX::XMFLOAT4) * objNor.size(), 0);
+	uvs->setData(&objUV[0], sizeof(DirectX::XMFLOAT2) * objUV.size(), 0);
+	ind->setData(&objInd[0], sizeof(DWORD) * objInd.size(), 0);
+
+	geometryBuffers[POSITION] = { sizeof(DirectX::XMFLOAT4), objPos.size(), 0, pos };
+	geometryBuffers[NORMAL] = { sizeof(DirectX::XMFLOAT4), objNor.size(), 0, nor };
+	geometryBuffers[TEXCOORD] = { sizeof(DirectX::XMFLOAT2), objUV.size(), 0, uvs };
+	geometryBuffers[INDEXBUFF] = { sizeof(DWORD), objInd.size(), 0, ind };
 }
 
 void Dx12Mesh::createMesh(float* meshPos, float* meshNor, float* meshUV, DWORD * meshInd, size_t numVert, size_t numInd)

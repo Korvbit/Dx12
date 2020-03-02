@@ -9,6 +9,7 @@
 #include <D3Dcompiler.h>
 #include "Dx12Camera.h"
 #include <DirectXMath.h>
+#include "WaveFrontReader.h"
 #include "IA.h"
 
 
@@ -34,6 +35,7 @@ public:
 	void setRotation(float3 rotation);
 	void setTranslation(float3 translation);
 
+	void createMeshFromObj(const wchar_t* filename);
 	void createMesh(float* meshPos, float* meshNor, float* meshUV, unsigned long* meshInd, size_t numVert, size_t numInd);
 	void createCube();
 	void createTriangle();

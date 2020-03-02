@@ -167,6 +167,9 @@
     <ClInclude Include="Dx12Camera.h">
       <Filter>Source Files\Dx12</Filter>
     </ClInclude>
+    <ClInclude Include="WaveFrontReader.h">
+      <Filter>Source Files\Dx12</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="VertexShader.hlsl">

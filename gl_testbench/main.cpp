@@ -270,7 +270,10 @@ int initialiseTestbench()
 		if (i % 2 == 0)
 			m->createMesh(pos, nor, UV, indexList, 8, ARRAYSIZE(indexList));
 		else
-			m->createCube();
+		{
+			m->createMeshFromObj(L"../assets/Laptop Keyframes/laptop_000001.obj");
+			m->setScale({0.04f, 0.04f, 0.04f});
+		}
 
 		// we can create a constant buffer outside the material, for example as part of the Mesh.
 		m->wvpBuffer = renderer->makeConstantBuffer(TRANSLATION);

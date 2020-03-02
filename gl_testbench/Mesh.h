@@ -15,6 +15,7 @@ public:
 	Mesh();
 	virtual ~Mesh();
 
+	virtual void createMeshFromObj(const wchar_t* filename) = 0;
 	virtual void createMesh(float* meshPos, float* meshNor, float* meshUV, unsigned long* meshInd, size_t numVert, size_t numInd) = 0;
 	virtual void createCube() = 0;
 	virtual void createTriangle() = 0;
