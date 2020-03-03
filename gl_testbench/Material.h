@@ -23,19 +23,8 @@ public:
 
 	enum class ShaderType { VS = 0, PS = 1, GS = 2, CS = 3 };
 
-	Material() : isValid(false) {};
+	Material() {};
 	virtual ~Material() {};
-
-	// all defines should be included in the shader before COMPILATION.
-	Material& addDefine(const std::string& defineText, ShaderType type);
-
-	// set shader name, DOES NOT COMPILE
-	virtual void setShader(const std::string& shaderFileName, ShaderType type) = 0;
-
-	// removes any resource linked to shader type
-	virtual void removeShader(ShaderType type) = 0;
-
-	virtual void setDiffuse(Color c) = 0;
 
 	/*
 	 * Compile and link all shaders
@@ -50,21 +39,9 @@ public:
 	virtual int compileMaterial(std::string& errString) = 0;
 
 	// this constant buffer will be bound every time we bind the material
-	virtual void addConstantBuffer(std::string name, unsigned int location) = 0;
+	virtual void addConstantBuffer(unsigned int location) = 0;
 
 	// location identifies the constant buffer in a unique way
 	virtual void updateConstantBuffer(const void* data, size_t size, unsigned int location) = 0;
-
-	// activate the material for use.
-	virtual int enable() = 0;
-
-	// disable material
-	virtual void disable() = 0;
-	
-	bool isValid;
-	Color color {};
-
-	std::map<ShaderType, std::string> shaderFileNames;
-	std::map<ShaderType, std::set<std::string>> shaderDefines;
 };
 

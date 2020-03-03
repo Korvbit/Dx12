@@ -1,18 +1,17 @@
 #include "Dx12ConstantBuffer.h"
 
-Dx12ConstantBuffer::Dx12ConstantBuffer(std::string NAME, unsigned int location, ID3D12Device* deviceIn)
+Dx12ConstantBuffer::Dx12ConstantBuffer(unsigned int location, ID3D12Device* deviceIn)
 {
-	this->name = NAME;
 	this->location = location;
 
 	device = deviceIn;
 
 	UINT cbSizeAligned = 1024 * 64;
-	if (name == DIFFUSE_TINT_NAME)
+	if (location == DIFFUSE_SLOT)
 	{
 		cbSizeAligned = (sizeof(4 * sizeof(float)) + 255) & ~255;
 	}
-	else if (name == std::string(TRANSLATION_NAME))
+	else if (location == TRANSLATION)
 	{
 		cbSizeAligned = (sizeof(float4) + 255) & ~255;
 	}
@@ -48,15 +47,13 @@ Dx12ConstantBuffer::Dx12ConstantBuffer(std::string NAME, unsigned int location, 
 
 Dx12ConstantBuffer::~Dx12ConstantBuffer()
 {
+	uploadHeap->Unmap(0, nullptr);
+	uploadHeap->Release();
 }
 
 void Dx12ConstantBuffer::setData(const void * data, size_t size, Material * m, unsigned int location)
 {
 	memcpy(mappedBuffer, data, size);
-}
-
-void Dx12ConstantBuffer::bind(Material *)
-{
 }
 
 ID3D12Resource * Dx12ConstantBuffer::getUploadHeap()

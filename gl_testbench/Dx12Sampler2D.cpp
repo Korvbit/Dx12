@@ -20,14 +20,7 @@ Dx12Sampler2D::Dx12Sampler2D(ID3D12Device* rendererDevice)
 
 Dx12Sampler2D::~Dx12Sampler2D()
 {
-}
-
-void Dx12Sampler2D::setMagFilter(FILTER filter)
-{
-}
-
-void Dx12Sampler2D::setMinFilter(FILTER filter)
-{
+	descriptorHeap->Release();
 }
 
 void Dx12Sampler2D::setWrap(WRAPPING s, WRAPPING t)

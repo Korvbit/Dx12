@@ -12,6 +12,7 @@
 #include "..//Dx12Mesh.h"
 #include "d3dx12.h"
 #include "functions.h"
+#include "..//Dx12Camera.h"
 
 class Dx12Renderer :
 	public Renderer
@@ -25,7 +26,6 @@ public:
 	float clearColor[4];
 	int direction = 1;
 
-	HWND hwnd = NULL;
 	LPCTSTR WindowName = L"temp";
 	LPCTSTR WindowTitle = L"temp";
 
@@ -33,6 +33,7 @@ public:
 	D3D12_RECT scissorRect;
 
 	ID3D12RootSignature* rootSignature;
+	ID3D12RootSignature* computeRootSignature;
 
 	ID3D12Device* device;
 	ID3D12DescriptorHeap* rtvDescriptorHeap;
@@ -47,30 +48,27 @@ public:
 	UINT64 fenceValue[frameBufferCount];
 	HANDLE fenceEvent;
 	IDXGISwapChain3* swapChain;
-	std::unordered_map<Technique*, std::vector<Mesh*>> drawList;
 	unsigned int clearFlags;
 
-	Material* makeMaterial(const std::string& name) { return new Dx12Material(name, device); };
+	Camera* makeCamera(unsigned int width, unsigned int height);
+	Material* makeMaterial();
 	Mesh* makeMesh();
-	VertexBuffer* makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage);
+	VertexBuffer* makeVertexBuffer(size_t size, int numEntries);
 	Texture2D* makeTexture2D();
 	Sampler2D* makeSampler2D();
 	RenderState* makeRenderState();
-	std::string getShaderPath() { return std::string(""); };
-	std::string getShaderExtension() { return std::string(".hlsl"); };
-	ConstantBuffer* makeConstantBuffer(std::string NAME, unsigned int location);
+	ConstantBuffer* makeConstantBuffer(unsigned int location);
 	Technique* makeTechnique(Material*, RenderState*);
 	void setResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList, ID3D12Resource* resource,
 		D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter);
 
-	int initialize(unsigned int width = 800, unsigned int height = 600);
+	int initialize(unsigned int width, unsigned int height);
 	void setWinTitle(const char* title);
 	void present();	// Swap buffers
-	int shutdown() { return -1;	};
+	int shutdown();
 
 	void setClearColor(float r, float g, float b, float a);
 	void clearBuffer(unsigned int flags);
-	void setRenderState(RenderState* ps) {};
 	void submit(Mesh* mesh);
 	void frame();
 

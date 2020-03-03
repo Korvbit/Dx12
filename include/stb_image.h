@@ -91,7 +91,8 @@
             STBI_NO_PNM   (.ppm and .pgm)
 
       - You can request *only* certain decoders and suppress all other ones
-        (this will be more forward-compatible, as addition of new decoders
+        (this will be more forward-compatible, as addition of 
+		decoders
         doesn't require you to disable them explicitly):
 
             STBI_ONLY_JPEG

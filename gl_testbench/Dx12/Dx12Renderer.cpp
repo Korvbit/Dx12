@@ -2,36 +2,46 @@
 
 Dx12Renderer::Dx12Renderer()
 {
-}
+	rootSignature = nullptr;
 
+	device = nullptr;
+	rtvDescriptorHeap = nullptr;
+	dsDescriptorHeap = nullptr;
+	depthStencilBuffer = nullptr;
+	commandQueue = nullptr;
+	commandList = nullptr;
+	swapChain = nullptr;
+
+	for (int i = 0; i < frameBufferCount; i++) {
+		renderTargets[i] = nullptr;
+		commandAllocator[i] = nullptr;
+		fence[i] = nullptr;
+	}
+}
 
 Dx12Renderer::~Dx12Renderer()
 {
-	rootSignature->Release();
+	shutdown();
+}
 
-	device->Release();
-	rtvDescriptorHeap->Release();
-	dsDescriptorHeap->Release();
-	depthStencilBuffer->Release();
-	commandQueue->Release();
-	commandList->Release();
-	swapChain->Release();
+Camera * Dx12Renderer::makeCamera(unsigned int width, unsigned int height)
+{
+	return new Dx12Camera(width, height);
+}
 
-	for (int i = 0; i < frameBufferCount; i++) {
-		renderTargets[i]->Release();
-		commandAllocator[i]->Release();
-		fence[i]->Release();
-	}
+Material * Dx12Renderer::makeMaterial()
+{
+	return new Dx12Material(device);
 }
 
 Mesh * Dx12Renderer::makeMesh()
 {
-	return new Dx12Mesh();
+	return new Dx12Mesh(device);
 }
 
-VertexBuffer * Dx12Renderer::makeVertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage)
+VertexBuffer * Dx12Renderer::makeVertexBuffer(size_t size, int numEntries)
 {
-	return new Dx12VertexBuffer(size, usage, device);
+	return new Dx12VertexBuffer(size, numEntries, device);
 }
 
 Texture2D * Dx12Renderer::makeTexture2D()
@@ -52,9 +62,9 @@ RenderState * Dx12Renderer::makeRenderState()
 	return newRS;
 }
 
-ConstantBuffer * Dx12Renderer::makeConstantBuffer(std::string NAME, unsigned int location)
+ConstantBuffer * Dx12Renderer::makeConstantBuffer(unsigned int location)
 {
-	return new Dx12ConstantBuffer(NAME, location, device);
+	return new Dx12ConstantBuffer(location, device);
 }
 
 Technique * Dx12Renderer::makeTechnique(Material* m, RenderState* r)
@@ -116,15 +126,22 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	else {	// If we did not find a compatible device we create a "warp device"
 		factory->EnumWarpAdapter(IID_PPV_ARGS(&adapter));
 		D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device));
+
+		SafeRelease(&adapter);
 	}
+	device->SetName(L"Device");
 
 	// Create the command queue
 	D3D12_COMMAND_QUEUE_DESC cqd = {};
 	device->CreateCommandQueue(&cqd, IID_PPV_ARGS(&commandQueue));
+	commandQueue->SetName(L"Command Queue");
 
 	// Create command allocators
 	for (int i = 0; i < frameBufferCount; ++i)
+	{
 		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator[i]));
+		commandAllocator[i]->SetName(L"CommandAllocator");
+	}
 
 	// Create command lists
 	device->CreateCommandList(
@@ -133,12 +150,13 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		commandAllocator[0],
 		nullptr,
 		IID_PPV_ARGS(&commandList));
-
+	commandList->SetName(L"CommandList");
 
 	// Create fences
 	for (int i = 0; i < frameBufferCount; ++i)
 	{
 		device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence[i]));
+		fence[i]->SetName(L"Fence");
 		fenceValue[i] = 1;
 		fenceEvent = CreateEvent(0, false, false, 0);
 	}
@@ -148,7 +166,6 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	CreateDXGIFactory(IID_PPV_ARGS(&factory));
 
 	// Create swapchain
-	IDXGISwapChain1* swapChain1 = nullptr;
 	
 	DXGI_SWAP_CHAIN_DESC1 scDesc = {};
 	scDesc.Width = 0;
@@ -175,13 +192,13 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
-
 	// Create render target descriptors
 	D3D12_DESCRIPTOR_HEAP_DESC dhd = {};
 	dhd.NumDescriptors = frameBufferCount;
 	dhd.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 
 	device->CreateDescriptorHeap(&dhd, IID_PPV_ARGS(&rtvDescriptorHeap));
+	rtvDescriptorHeap->SetName(L"RTVDescriptorHeap");
 
 	rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	D3D12_CPU_DESCRIPTOR_HANDLE cdh = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
@@ -191,6 +208,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		swapChain->GetBuffer(i, IID_PPV_ARGS(&renderTargets[i]));
 		device->CreateRenderTargetView(renderTargets[i], nullptr, cdh);
 		cdh.ptr += rtvDescriptorSize;
+		renderTargets[i]->SetName(L"RenderTarget");
 	}
 
 	// Create depth stencil
@@ -238,6 +256,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	dsDescriptorHeap->SetName(L"Depth/Stencil Resource Heap");
 
 	device->CreateDepthStencilView(depthStencilBuffer, &depthStencilDesc, dsDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	depthStencilBuffer->SetName(L"DepthStencilBuffer");
 	#pragma endregion
 
 	// Initialize the viewport
@@ -255,12 +274,17 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	scissorRect.bottom = height;
 
 	// Define descriptor(table) ranges
-	D3D12_DESCRIPTOR_RANGE dtRanges[1];
+	D3D12_DESCRIPTOR_RANGE dtRanges[2];
 	dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	dtRanges[0].NumDescriptors = 1;
 	dtRanges[0].BaseShaderRegister = 0;
 	dtRanges[0].RegisterSpace = 0;
 	dtRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	dtRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+	dtRanges[1].NumDescriptors = 1;
+	dtRanges[1].BaseShaderRegister = 0;
+	dtRanges[1].RegisterSpace = 0;
+	dtRanges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	D3D12_DESCRIPTOR_RANGE samplerRanges[1];
 	samplerRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
@@ -270,9 +294,12 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	samplerRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	// Create descriptor table
-	D3D12_ROOT_DESCRIPTOR_TABLE dt;
-	dt.NumDescriptorRanges = ARRAYSIZE(dtRanges);
-	dt.pDescriptorRanges = dtRanges;
+	D3D12_ROOT_DESCRIPTOR_TABLE dt[2];
+	dt[0].NumDescriptorRanges = 1;
+	dt[0].pDescriptorRanges = &dtRanges[0];
+
+	dt[1].NumDescriptorRanges = 1;
+	dt[1].pDescriptorRanges = &dtRanges[1];
 
 	D3D12_ROOT_DESCRIPTOR_TABLE dtSampler;
 	dtSampler.NumDescriptorRanges = ARRAYSIZE(samplerRanges);
@@ -284,9 +311,9 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	rootCBVDescriptor.ShaderRegister = 0;
 	
 	// Create root parameter
-	D3D12_ROOT_PARAMETER rootParam[4];
+	D3D12_ROOT_PARAMETER rootParam[5];
 	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[0].DescriptorTable = dt;
+	rootParam[0].DescriptorTable = dt[0];
 	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
@@ -303,6 +330,10 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	rootParam[3].Descriptor = rootCBVDescriptor;
 	rootParam[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
+	rootParam[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParam[4].DescriptorTable = dt[1];
+	rootParam[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
 	// Create root signature
 	D3D12_ROOT_SIGNATURE_DESC rsDesc;
 	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -315,6 +346,15 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
 
 	device->CreateRootSignature(0, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+	rootSignature->SetName(L"RootSignature");
+
+	// Compute stuff
+	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	CD3DX12_ROOT_SIGNATURE_DESC computeRootSignatureDesc(ARRAYSIZE(rootParam), rootParam, 0, nullptr);
+	D3D12SerializeRootSignature(&computeRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
+	device->CreateRootSignature(0, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), IID_PPV_ARGS(&computeRootSignature));
+	rootSignature->SetName(L"ComputeRootSignature");
 
 	// Create constant buffer ================================================
 
@@ -345,6 +385,27 @@ void Dx12Renderer::present()
 				  //NOT BEST PRACTICE, only used as such for simplicity.
 }
 
+int Dx12Renderer::shutdown()
+{
+	SafeRelease(&rootSignature);
+
+	SafeRelease(&device);
+	SafeRelease(&rtvDescriptorHeap);
+	SafeRelease(&dsDescriptorHeap);
+	SafeRelease(&depthStencilBuffer);
+	SafeRelease(&commandQueue);
+	SafeRelease(&commandList);
+	SafeRelease(&swapChain);
+
+	for (int i = 0; i < frameBufferCount; i++) {
+		SafeRelease(&renderTargets[i]);
+		SafeRelease(&commandAllocator[i]);
+		SafeRelease(&fence[i]);
+	}
+
+	return 1;
+}
+
 void Dx12Renderer::setClearColor(float r, float g, float b, float a)
 {
 	clearColor[0] = r;
@@ -355,11 +416,21 @@ void Dx12Renderer::setClearColor(float r, float g, float b, float a)
 
 void Dx12Renderer::clearBuffer(unsigned int flags)
 {
+	clearFlags = flags;
+}
+
+void Dx12Renderer::submit(Mesh * mesh)
+{
+	drawList[mesh->technique].push_back(mesh);
+}
+
+void Dx12Renderer::frame()
+{
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
 	commandAllocator[frameIndex]->Reset();
 	commandList->Reset(commandAllocator[frameIndex], NULL);
-	
+
 	setResourceTransitionBarrier(commandList,
 		renderTargets[frameIndex],
 		D3D12_RESOURCE_STATE_PRESENT,		// state before
@@ -375,36 +446,29 @@ void Dx12Renderer::clearBuffer(unsigned int flags)
 	// Record commands.
 	commandList->OMSetRenderTargets(1, &cdh, false, &dsvHandle);
 
-	if (flags & CLEAR_BUFFER_FLAGS::COLOR)
+	if (clearFlags & CLEAR_BUFFER_FLAGS::COLOR)
 	{
 		commandList->ClearRenderTargetView(cdh, clearColor, 0, nullptr);
 	}
-	if (flags & CLEAR_BUFFER_FLAGS::DEPTH)
+	if (clearFlags & CLEAR_BUFFER_FLAGS::DEPTH)
 	{
 		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 	}
-}
 
-void Dx12Renderer::submit(Mesh * mesh)
-{
-	drawList[mesh->technique].push_back(mesh);
-}
-
-void Dx12Renderer::frame()
-{
 	commandList->SetGraphicsRootSignature(rootSignature);
 	commandList->RSSetViewports(1, &viewport);
 	commandList->RSSetScissorRects(1, &scissorRect);
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	Dx12Material* material;
-	Dx12RenderState* renderState;
-	Dx12Texture2D* texture;
-	Dx12Sampler2D* sampler;
-	Dx12VertexBuffer* vBuffer;
-	Dx12VertexBuffer* nBuffer;
-	Dx12VertexBuffer* uBuffer;
-	Dx12ConstantBuffer* cBuffer;
+	Dx12Material* material = nullptr;
+	Dx12RenderState* renderState = nullptr;
+	Dx12Texture2D* texture = nullptr;
+	Dx12Sampler2D* sampler = nullptr;
+	Dx12VertexBuffer* vBuffer = nullptr;
+	Dx12VertexBuffer* nBuffer = nullptr;
+	Dx12VertexBuffer* uBuffer = nullptr;
+	Dx12IndexBuffer* iBuffer = nullptr;
+	Dx12ConstantBuffer* cBuffer = nullptr;
 
 	for (auto work : drawList)
 	{
@@ -416,6 +480,7 @@ void Dx12Renderer::frame()
 		for (auto mesh : work.second)
 		{
 			size_t numberElements = mesh->geometryBuffers[0].numElements;
+			size_t numberIndices = mesh->geometryBuffers[INDEXBUFF].numElements;
 			for (auto t : mesh->textures)
 			{
 				texture = (Dx12Texture2D*)(t.second);
@@ -429,16 +494,31 @@ void Dx12Renderer::frame()
 			}
 			vBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[POSITION].buffer);
 			nBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[NORMAL].buffer);
-			uBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[TEXTCOORD].buffer);
+			uBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[TEXCOORD].buffer);
+			iBuffer = (Dx12IndexBuffer*)(mesh->geometryBuffers[INDEXBUFF].buffer);
 			D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[] = { *vBuffer->getView(), *nBuffer->getView(), *uBuffer->getView() };
 			commandList->IASetVertexBuffers(0, ARRAYSIZE(vertexBufferViews), vertexBufferViews);
+			commandList->IASetIndexBuffer(iBuffer->getView());
 
-			cBuffer = (Dx12ConstantBuffer*)(mesh->txBuffer);
+			cBuffer = (Dx12ConstantBuffer*)(mesh->wvpBuffer);
 			commandList->SetGraphicsRootConstantBufferView(2, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
-			commandList->DrawInstanced(3, 1, 0, 0);
+			commandList->DrawIndexedInstanced(numberIndices, 1, 0, 0, 0);
+			for (auto t : mesh->textures)
+			{
+				texture = (Dx12Texture2D*)(t.second);
+				
+				ID3D12DescriptorHeap* descriptorHeaps[] = { texture->getNullDescriptorHeap() };
+				commandList->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
+
+				commandList->SetGraphicsRootDescriptorTable(0, texture->getNullDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+			}
 		}
 	}
 
+	for (auto work : drawList)
+	{
+		work.second.clear();
+	}
 	drawList.clear();
 
 	setResourceTransitionBarrier(commandList,
@@ -512,8 +592,20 @@ bool Dx12Renderer::initializeWindow(HINSTANCE hInstance, int width, int height, 
 	}
 
 	ShowWindow(hwnd, SW_SHOW);
+	//ShowWindow(GetConsoleWindow(), SW_HIDE);
 	UpdateWindow(hwnd);
 
+	RECT rcClip;
+	GetWindowRect(hwnd, &rcClip);
+	ClipCursor(&rcClip);
+
+	POINT pos;
+	pos.x = width / 2;
+	pos.y = height / 2;
+	ClientToScreen(hwnd, &pos);
+	SetCursorPos(pos.x, pos.y);
+	ShowCursor(false);
+	
 	return true;
 }
 

@@ -1,6 +1,6 @@
 #include "Dx12VertexBuffer.h"
 
-Dx12VertexBuffer::Dx12VertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage, ID3D12Device* rendererDevice)
+Dx12VertexBuffer::Dx12VertexBuffer(size_t size, int numEntries, ID3D12Device* rendererDevice)
 {
 	device = rendererDevice;
 
@@ -29,12 +29,13 @@ Dx12VertexBuffer::Dx12VertexBuffer(size_t size, VertexBuffer::DATA_USAGE usage, 
 	);
 
 	view.BufferLocation = buffer->GetGPUVirtualAddress();
-	view.StrideInBytes = size / 300;
+	view.StrideInBytes = size / numEntries;
 	view.SizeInBytes = size;
 }
 
 Dx12VertexBuffer::~Dx12VertexBuffer()
 {
+	buffer->Release();
 }
 
 void Dx12VertexBuffer::setData(const void * data, size_t size, size_t offset)
@@ -44,20 +45,6 @@ void Dx12VertexBuffer::setData(const void * data, size_t size, size_t offset)
 	buffer->Map(0, &range, reinterpret_cast<void**>(&gpuAddress));
 	memcpy(gpuAddress + offset, data, size);
 	buffer->Unmap(0, nullptr);
-}
-
-void Dx12VertexBuffer::bind(size_t offset, size_t size, unsigned int location)
-{
-
-}
-
-void Dx12VertexBuffer::unbind()
-{
-}
-
-size_t Dx12VertexBuffer::getSize()
-{
-	return size_t();
 }
 
 D3D12_VERTEX_BUFFER_VIEW * Dx12VertexBuffer::getView()

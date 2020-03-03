@@ -15,12 +15,8 @@ class Dx12Material :
 	friend Dx12Renderer;
 
 public:
-	Dx12Material(const std::string& name, ID3D12Device* rendererDevice);
+	Dx12Material(ID3D12Device* rendererDevice);
 	~Dx12Material();
-
-	void setShader(const std::string& shaderFileName, ShaderType type);
-	void removeShader(ShaderType type);
-	void setDiffuse(Color c);
 
 	/*
 	 * Compile and link all shaders
@@ -33,13 +29,8 @@ public:
 	 * has changed.
 	*/
 	int compileMaterial(std::string& errString);
-	void addConstantBuffer(std::string name, unsigned int location);
+	void addConstantBuffer(unsigned int location);
 	void updateConstantBuffer(const void* data, size_t size, unsigned int location);
-
-	// activate the material for use.
-	int enable();
-	// disable material
-	void disable();
 
 	ID3DBlob* vertexBlob;
 	ID3DBlob* pixelBlob;

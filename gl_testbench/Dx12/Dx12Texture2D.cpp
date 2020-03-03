@@ -12,14 +12,18 @@ Dx12Texture2D::Dx12Texture2D(ID3D12Device* rendererDevice, ID3D12GraphicsCommand
 	heapDescriptorDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	heapDescriptorDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	device->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&descriptorHeap));
-
-	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
-	fenceValue = 1;
-	fenceEvent = CreateEvent(0, false, false, 0);
+	// Create null descriptor heap to be able to unbind texture
+	device->CreateDescriptorHeap(&heapDescriptorDesc, IID_PPV_ARGS(&nullDescriptorHeap));
 }
 
 Dx12Texture2D::~Dx12Texture2D()
 {
+	delete imageData;
+
+	textureBuffer->Release();
+	textureBufferUploadHeap->Release();
+	descriptorHeap->Release();
+	nullDescriptorHeap->Release();
 }
 
 int Dx12Texture2D::loadFromFile(std::string filename)
@@ -149,21 +153,11 @@ int Dx12Texture2D::loadFromFile(std::string filename)
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
 	device->CreateShaderResourceView(textureBuffer, &srvDesc, descriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	device->CreateShaderResourceView(nullptr, &srvDesc, nullDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 	commandList->Close();
 	ID3D12CommandList* ppCommandLists[] = { commandList };
 	commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
-
-	// Signal when the fence has increased in value
-	const UINT64 signalValue = fenceValue;
-	commandQueue->Signal(fence, signalValue);
-	fenceValue++; // Increment the comparison value inbefore the next call
-
-	// Wait until the value has been incremented
-	if (fence->GetCompletedValue() < signalValue) {
-		fence->SetEventOnCompletion(signalValue, fenceEvent);
-		WaitForSingleObject(fenceEvent, INFINITE);
-	}
 
 	return imageSize;
 }
@@ -171,6 +165,11 @@ int Dx12Texture2D::loadFromFile(std::string filename)
 ID3D12DescriptorHeap * Dx12Texture2D::getDescriptorHeap()
 {
 	return descriptorHeap;
+}
+
+ID3D12DescriptorHeap * Dx12Texture2D::getNullDescriptorHeap()
+{
+	return nullDescriptorHeap;
 }
 
 // get the dxgi format equivilent of a wic format

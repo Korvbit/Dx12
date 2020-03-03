@@ -23,15 +23,12 @@ Dx12RenderState::Dx12RenderState(ID3D12Device* rendererDevice)
 
 Dx12RenderState::~Dx12RenderState()
 {
+	pipelineStateObject->Release();
 }
 
 void Dx12RenderState::setWireFrame(bool wireframe)
 {
 	fillMode = wireframe ? D3D12_FILL_MODE_WIREFRAME : D3D12_FILL_MODE_SOLID;
-}
-
-void Dx12RenderState::set()
-{
 }
 
 D3D12_FILL_MODE Dx12RenderState::getFillMode()
