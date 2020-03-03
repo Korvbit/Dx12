@@ -22,6 +22,10 @@ Dx12Camera::Dx12Camera(int screenWidth, int screenHeight)
 	stepR = 0;
 	stepU = 0;
 	stepD = 0;
+	rotR = 0;
+	rotL = 0;
+	rotU = 0;
+	rotD = 0;
 	speed = FAST_SPEED;
 }
 
@@ -55,6 +59,22 @@ void Dx12Camera::startMove(WPARAM key)
 
 	case KEY_Q:
 		stepD = 1;
+		break;
+
+	case VK_LEFT:
+		rotL = 1;
+		break;
+
+	case VK_RIGHT:
+		rotR = 1;
+		break;
+
+	case VK_UP:
+		rotU = 1;
+		break;
+
+	case VK_DOWN:
+		rotD = 1;
 		break;
 
 	case VK_SHIFT:
@@ -94,6 +114,22 @@ void Dx12Camera::endMove(WPARAM key)
 		stepD = 0;
 		break;
 
+	case VK_LEFT:
+		rotL = 0;
+		break;
+
+	case VK_RIGHT:
+		rotR = 0;
+		break;
+
+	case VK_UP:
+		rotU = 0;
+		break;
+
+	case VK_DOWN:
+		rotD = 0;
+		break;
+
 	case VK_SHIFT:
 		speed = FAST_SPEED;
 		break;
@@ -107,15 +143,15 @@ void Dx12Camera::endMove(WPARAM key)
 	}
 }
 
-void Dx12Camera::rotate(int movementX, int movementY)
+void Dx12Camera::rotate(float movementX, float movementY)
 {
-	float angleX = (float)movementX / 1000.0f;
+	float angleX = movementX / 1000.0f;
 	DirectX::XMVECTOR rotate = DirectX::XMQuaternionRotationRollPitchYaw(0.0f, angleX, 0.0f);
 	DirectX::XMStoreFloat4(&forward, DirectX::XMVector3Rotate(DirectX::XMLoadFloat4(&forward), rotate));
 	DirectX::XMStoreFloat4(&right, DirectX::XMVector3Rotate(DirectX::XMLoadFloat4(&right), rotate));
 	DirectX::XMStoreFloat4(&up, DirectX::XMVector3Rotate(DirectX::XMLoadFloat4(&up), rotate));
 	
-	float angleY = (float)movementY / 1000.0f;
+	float angleY = movementY / 1000.0f;
 	rotate = DirectX::XMQuaternionRotationAxis(DirectX::XMLoadFloat4(&right), angleY);
 	DirectX::XMStoreFloat4(&forward, DirectX::XMVector3Rotate(DirectX::XMLoadFloat4(&forward), rotate));
 	DirectX::XMStoreFloat4(&up, DirectX::XMVector3Rotate(DirectX::XMLoadFloat4(&up), rotate));
@@ -139,6 +175,10 @@ void Dx12Camera::reset()
 	stepR = 0;
 	stepU = 0;
 	stepD = 0;
+	rotR = 0;
+	rotL = 0;
+	rotU = 0;
+	rotD = 0;
 	speed = 10;
 }
 
@@ -155,6 +195,8 @@ void Dx12Camera::Update(float dt)
 	position.x += up.x * speed * dt * (stepU - stepD);
 	position.y += up.y * speed * dt * (stepU - stepD);
 	position.z += up.z * speed * dt * (stepU - stepD);
+
+	rotate(pow(FAST_SPEED, 4) * dt * (rotR - rotL), pow(FAST_SPEED, 4) * dt * (rotD - rotU));
 
 	// Create projection matrix
 	DirectX::XMMATRIX tmpMat = DirectX::XMMatrixPerspectiveFovLH(fov, aspect, nearPlane, farPlane);

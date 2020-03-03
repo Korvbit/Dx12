@@ -33,6 +33,7 @@ public:
 	D3D12_RECT scissorRect;
 
 	ID3D12RootSignature* rootSignature;
+	ID3D12RootSignature* computeRootSignature;
 
 	ID3D12Device* device;
 	ID3D12DescriptorHeap* rtvDescriptorHeap;

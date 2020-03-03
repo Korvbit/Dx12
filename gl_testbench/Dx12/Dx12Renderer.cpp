@@ -274,12 +274,17 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	scissorRect.bottom = height;
 
 	// Define descriptor(table) ranges
-	D3D12_DESCRIPTOR_RANGE dtRanges[1];
+	D3D12_DESCRIPTOR_RANGE dtRanges[2];
 	dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	dtRanges[0].NumDescriptors = 1;
 	dtRanges[0].BaseShaderRegister = 0;
 	dtRanges[0].RegisterSpace = 0;
 	dtRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	dtRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+	dtRanges[1].NumDescriptors = 1;
+	dtRanges[1].BaseShaderRegister = 0;
+	dtRanges[1].RegisterSpace = 0;
+	dtRanges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	D3D12_DESCRIPTOR_RANGE samplerRanges[1];
 	samplerRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
@@ -289,9 +294,12 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	samplerRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	// Create descriptor table
-	D3D12_ROOT_DESCRIPTOR_TABLE dt;
-	dt.NumDescriptorRanges = ARRAYSIZE(dtRanges);
-	dt.pDescriptorRanges = dtRanges;
+	D3D12_ROOT_DESCRIPTOR_TABLE dt[2];
+	dt[0].NumDescriptorRanges = 1;
+	dt[0].pDescriptorRanges = &dtRanges[0];
+
+	dt[1].NumDescriptorRanges = 1;
+	dt[1].pDescriptorRanges = &dtRanges[1];
 
 	D3D12_ROOT_DESCRIPTOR_TABLE dtSampler;
 	dtSampler.NumDescriptorRanges = ARRAYSIZE(samplerRanges);
@@ -303,9 +311,9 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	rootCBVDescriptor.ShaderRegister = 0;
 	
 	// Create root parameter
-	D3D12_ROOT_PARAMETER rootParam[4];
+	D3D12_ROOT_PARAMETER rootParam[5];
 	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[0].DescriptorTable = dt;
+	rootParam[0].DescriptorTable = dt[0];
 	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
@@ -322,6 +330,10 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	rootParam[3].Descriptor = rootCBVDescriptor;
 	rootParam[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
+	rootParam[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParam[4].DescriptorTable = dt[1];
+	rootParam[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
 	// Create root signature
 	D3D12_ROOT_SIGNATURE_DESC rsDesc;
 	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
@@ -335,6 +347,14 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 
 	device->CreateRootSignature(0, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	rootSignature->SetName(L"RootSignature");
+
+	// Compute stuff
+	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	CD3DX12_ROOT_SIGNATURE_DESC computeRootSignatureDesc(ARRAYSIZE(rootParam), rootParam, 0, nullptr);
+	D3D12SerializeRootSignature(&computeRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
+	device->CreateRootSignature(0, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), IID_PPV_ARGS(&computeRootSignature));
+	rootSignature->SetName(L"ComputeRootSignature");
 
 	// Create constant buffer ================================================
 
@@ -572,7 +592,7 @@ bool Dx12Renderer::initializeWindow(HINSTANCE hInstance, int width, int height, 
 	}
 
 	ShowWindow(hwnd, SW_SHOW);
-	ShowWindow(GetConsoleWindow(), SW_HIDE);
+	//ShowWindow(GetConsoleWindow(), SW_HIDE);
 	UpdateWindow(hwnd);
 
 	RECT rcClip;

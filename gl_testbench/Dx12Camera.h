@@ -14,7 +14,7 @@ public:
 
 	void startMove(WPARAM key);
 	void endMove(WPARAM key);
-	void rotate(int movementX, int movementY);
+	void rotate(float movementX, float movementY);
 	void reset();
 	void Update(float dt);
 
@@ -33,6 +33,10 @@ public:
 	int stepR;
 	int stepU;
 	int stepD;
+	int rotR;
+	int rotL;
+	int rotU;
+	int rotD;
 	int speed;
 
 	DirectX::XMFLOAT4X4 vpMatrix;

@@ -73,7 +73,7 @@ void run() {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		if (msg.message == WM_MOUSEMOVE)
+		/*if (msg.message == WM_MOUSEMOVE)
 		{
 			POINT pos;
 			pos.x = GET_X_LPARAM(msg.lParam);
@@ -84,7 +84,7 @@ void run() {
 			int diffY = pos.y - center.y;
 			camera->rotate(diffX, diffY);
 			SetCursorPos(center.x, center.y);
-		}
+		}*/
 		if (msg.message == WM_KEYDOWN)
 		{
 			camera->startMove(msg.wParam);

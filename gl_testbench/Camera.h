@@ -10,7 +10,7 @@ public:
 
 	virtual void startMove(WPARAM key) = 0;
 	virtual void endMove(WPARAM key) = 0;
-	virtual void rotate(int movementX, int movementY) = 0;
+	virtual void rotate(float movementX, float movementY) = 0;
 	virtual void reset() = 0;
 	virtual void Update(float dt) = 0;
 
