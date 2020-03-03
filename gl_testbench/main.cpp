@@ -271,7 +271,7 @@ int initialiseTestbench()
 			m->createMesh(pos, nor, UV, indexList, 8, ARRAYSIZE(indexList));
 		else
 		{
-			m->createMeshFromObj(L"../assets/Laptop Keyframes/laptop_000001.obj");
+			m->createMeshFromObj(L"../assets/Laptop Keyframes/laptop_000001.obj", 1);
 			m->setScale({0.04f, 0.04f, 0.04f});
 		}
 
