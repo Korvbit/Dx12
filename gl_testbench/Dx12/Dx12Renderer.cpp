@@ -492,13 +492,16 @@ void Dx12Renderer::frame()
 				commandList->SetGraphicsRootDescriptorTable(0, texture->getDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 				commandList->SetGraphicsRootDescriptorTable(1, sampler->getDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 			}
-			vBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[POSITION].buffer);
-			nBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[NORMAL].buffer);
+			vBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[POSITION + (mesh->getCurrentKeyframe() * 2)].buffer);
+			nBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[NORMAL + (mesh->getCurrentKeyframe() * 2)].buffer);
 			uBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[TEXCOORD].buffer);
 			iBuffer = (Dx12IndexBuffer*)(mesh->geometryBuffers[INDEXBUFF].buffer);
 			D3D12_VERTEX_BUFFER_VIEW vertexBufferViews[] = { *vBuffer->getView(), *nBuffer->getView(), *uBuffer->getView() };
 			commandList->IASetVertexBuffers(0, ARRAYSIZE(vertexBufferViews), vertexBufferViews);
 			commandList->IASetIndexBuffer(iBuffer->getView());
+
+			mesh->incKeyframe();
+			if (mesh)
 
 			cBuffer = (Dx12ConstantBuffer*)(mesh->wvpBuffer);
 			commandList->SetGraphicsRootConstantBufferView(2, cBuffer->getUploadHeap()->GetGPUVirtualAddress());

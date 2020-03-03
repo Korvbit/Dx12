@@ -20,6 +20,9 @@ public:
 	virtual void createCube() = 0;
 	virtual void createTriangle() = 0;
 	virtual void createQuad() = 0;
+	virtual int getCurrentKeyframe() = 0;
+	virtual void incKeyframe() = 0;
+	virtual void setCurrentKeyframe(int keyframe) = 0;
 
 	// technique has: Material, RenderState, Attachments (color, depth, etc)
 	Technique* technique; 

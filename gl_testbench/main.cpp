@@ -59,9 +59,9 @@ void updateDelta()
 };
 
 // TOTAL_OBJECTS pretty much decides how many drawcalls in a brute force approach.
-constexpr int TOTAL_OBJECTS = 40;
+constexpr int TOTAL_OBJECTS = 1;
 // this has to do with how the triangles are spread in the screen, not important.
-constexpr int TOTAL_PLACES = 8000;
+constexpr int TOTAL_PLACES = 80000;
 float xt[TOTAL_PLACES], yt[TOTAL_PLACES], zt[TOTAL_PLACES];
 
 
@@ -113,12 +113,12 @@ void updateScene()
 	const int size = scene.size();
 	for (int i = 0; i < size; i++)
 	{
-		scene[i]->rotateMesh(float3({ 0.0f, 0.005f * zt[(i + shift) % (TOTAL_PLACES)], 0.0f }));
+		//scene[i]->rotateMesh(float3({ 0.0f, 0.005f * zt[(i + shift) % (TOTAL_PLACES)], 0.0f }));
 		scene[i]->setTranslation(
 			{
-				xt[((100 * i) + shift) % (TOTAL_PLACES)],
-				yt[((100 * i) + shift) % (TOTAL_PLACES)],
-				zt[((100 * i) + shift) % (TOTAL_PLACES)],
+				xt[((i) + shift) % (TOTAL_PLACES)],
+				yt[((i) + shift) % (TOTAL_PLACES)],
+				zt[((i) + shift) % (TOTAL_PLACES)],
 			}
 		);
 		scene[i]->Update(camera);
@@ -195,8 +195,8 @@ int initialiseTestbench()
 	renderState1->setWireFrame(true);
 
 	// basic technique
-	techniques.push_back(renderer->makeTechnique(materials[0], renderState1));
-	techniques.push_back(renderer->makeTechnique(materials[1], renderer->makeRenderState()));
+	techniques.push_back(renderer->makeTechnique(materials[0], renderer->makeRenderState()));
+	techniques.push_back(renderer->makeTechnique(materials[1], renderState1));
 	techniques.push_back(renderer->makeTechnique(materials[2], renderer->makeRenderState()));
 	techniques.push_back(renderer->makeTechnique(materials[3], renderer->makeRenderState()));
 
@@ -273,7 +273,7 @@ int initialiseTestbench()
 		Mesh* m = renderer->makeMesh();
 
 		{
-			m->createMeshFromObj(L"../assets/Laptop Keyframes/", 25);
+			m->createMeshFromObj(L"../assets/Laptop Keyframes/", 250);
 			m->setScale({0.04f, 0.04f, 0.04f});
 		}
 

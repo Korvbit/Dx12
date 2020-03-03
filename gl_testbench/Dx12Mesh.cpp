@@ -21,6 +21,8 @@ Dx12Mesh::Dx12Mesh(ID3D12Device* rendererDevice, float3 translate, float3 rotate
 	tmpFloat4 = DirectX::XMFLOAT3(translate.x, translate.y, translate.z);
 	tmpVec = DirectX::XMLoadFloat3(&tmpFloat4);
 	DirectX::XMStoreFloat3(&this->translation, tmpVec);
+
+	currentKeyframe = 0;
 }
 
 Dx12Mesh::~Dx12Mesh()
@@ -103,6 +105,26 @@ void Dx12Mesh::setRotation(float3 rotation)
 void Dx12Mesh::setTranslation(float3 translation)
 {
 	this->translation = DirectX::XMFLOAT3(translation.x, translation.y, translation.z);
+}
+
+int Dx12Mesh::getCurrentKeyframe()
+{
+	return currentKeyframe;
+}
+
+void Dx12Mesh::incKeyframe()
+{
+	keyFrameInc += 0.01;
+	currentKeyframe = (currentKeyframe + (int)keyFrameInc) % nrOfKeyframes;
+	if (keyFrameInc >= 1.0f)
+	{
+		keyFrameInc = 0.0f;
+	}
+}
+
+void Dx12Mesh::setCurrentKeyframe(int keyframe)
+{
+	currentKeyframe = keyframe;
 }
 
 void Dx12Mesh::createMeshFromObj(const wchar_t * filepath, unsigned int keyframes)

@@ -35,6 +35,10 @@ public:
 	void setRotation(float3 rotation);
 	void setTranslation(float3 translation);
 
+	int getCurrentKeyframe();
+	void incKeyframe();
+	void setCurrentKeyframe(int keyframe);
+
 	void createMeshFromObj(const wchar_t* filepath, unsigned int keyframes);
 	void createMesh(float* meshPos, float* meshNor, float* meshUV, DWORD* meshInd, size_t numVert, size_t numInd);
 	void createCube();
@@ -49,6 +53,8 @@ private:
 	VertexBuffer* ind;
 
 	unsigned int nrOfKeyframes;
+	unsigned int currentKeyframe;
+	float keyFrameInc = 0.0f;
 
 	DirectX::XMFLOAT3 scale;
 	DirectX::XMFLOAT4 rotationQuat;
