@@ -42,6 +42,7 @@ float dt = 0.0f;
 float fpsCounter = 0.0f;
 int frameCounter = 0;
 int fps = 0;
+bool shiftStep = true;
 POINT center = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
 
 void updateDelta()
@@ -87,6 +88,10 @@ void run() {
 		}*/
 		if (msg.message == WM_KEYDOWN)
 		{
+			if (msg.wParam == KEY_P)
+			{
+				shiftStep = !shiftStep;
+			}
 			camera->startMove(msg.wParam);
 		}
 		if (msg.message == WM_KEYUP)
@@ -118,7 +123,7 @@ void updateScene()
 		);
 		scene[i]->Update(camera);
 	}
-	++shift;
+	shift += shiftStep;
 
 	++frameCounter;
 	fpsCounter += dt;
@@ -268,7 +273,10 @@ int initialiseTestbench()
 		Mesh* m = renderer->makeMesh();
 
 		if (i % 2 == 0)
-			m->createMesh(pos, nor, UV, indexList, 8, ARRAYSIZE(indexList));
+		{
+			m->createMeshFromObj(L"../assets/Random Stuff/XY_Eevee.obj");
+			m->setScale({ 0.004f, 0.004f, 0.004f });
+		}
 		else
 		{
 			m->createMeshFromObj(L"../assets/Laptop Keyframes/laptop_000001.obj");
