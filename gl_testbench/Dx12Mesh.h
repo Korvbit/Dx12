@@ -35,7 +35,7 @@ public:
 	void setRotation(float3 rotation);
 	void setTranslation(float3 translation);
 
-	void createMeshFromObj(const wchar_t* filename, unsigned int keyframes);
+	void createMeshFromObj(const wchar_t* filepath, unsigned int keyframes);
 	void createMesh(float* meshPos, float* meshNor, float* meshUV, DWORD* meshInd, size_t numVert, size_t numInd);
 	void createCube();
 	void createTriangle();
@@ -45,8 +45,8 @@ private:
 	ID3D12Device* device;
 	std::vector<VertexBuffer*> pos;
 	std::vector<VertexBuffer*> nor;
-	std::vector<VertexBuffer*> uvs;
-	std::vector<VertexBuffer*> ind;
+	VertexBuffer* uvs;
+	VertexBuffer* ind;
 
 	unsigned int nrOfKeyframes;
 

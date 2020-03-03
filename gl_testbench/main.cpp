@@ -272,14 +272,8 @@ int initialiseTestbench()
 
 		Mesh* m = renderer->makeMesh();
 
-		if (i % 2 == 0)
 		{
-			m->createMeshFromObj(L"../assets/Random Stuff/XY_Eevee.obj");
-			m->setScale({ 0.004f, 0.004f, 0.004f });
-		}
-		else
-		{
-			m->createMeshFromObj(L"../assets/Laptop Keyframes/laptop_000001.obj", 1);
+			m->createMeshFromObj(L"../assets/Laptop Keyframes/", 25);
 			m->setScale({0.04f, 0.04f, 0.04f});
 		}
 

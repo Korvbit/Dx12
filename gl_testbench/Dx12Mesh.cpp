@@ -29,9 +29,9 @@ Dx12Mesh::~Dx12Mesh()
 	{
 		delete pos[i];
 		delete nor[i];
-		delete uvs[i];
-		delete ind[i];
 	}
+	delete uvs;
+	delete ind;
 
 	// translation buffers
 	delete wvpBuffer;
@@ -105,40 +105,64 @@ void Dx12Mesh::setTranslation(float3 translation)
 	this->translation = DirectX::XMFLOAT3(translation.x, translation.y, translation.z);
 }
 
-void Dx12Mesh::createMeshFromObj(const wchar_t * filename, unsigned int keyframes)
+void Dx12Mesh::createMeshFromObj(const wchar_t * filepath, unsigned int keyframes)
 {
 	nrOfKeyframes = keyframes;
 
-	for (int i = 0; i < keyframes; i++)
+	WaveFrontReader<DWORD> objLoader;
+	wchar_t fileNameBuffer[256];
+	swprintf_s(fileNameBuffer, L"%s%d.obj", filepath, 1);
+	objLoader.Load(fileNameBuffer);
+	std::vector<DirectX::XMFLOAT4> objPos;
+	std::vector<DirectX::XMFLOAT4> objNor;
+	std::vector<DirectX::XMFLOAT2> objUV;
+	std::vector<DWORD> objInd = objLoader.indices;
+
+	for (auto work : objLoader.vertices)
+	{
+		objPos.push_back(DirectX::XMFLOAT4(work.position.x, work.position.y, work.position.z, 1.0f));
+		objNor.push_back(DirectX::XMFLOAT4(work.normal.x, work.normal.y, work.normal.z, 0.0f));
+		objUV.push_back(work.textureCoordinate);
+	}
+
+	pos.push_back(new Dx12VertexBuffer(sizeof(DirectX::XMFLOAT4) * objPos.size(), objPos.size(), device));
+	nor.push_back(new Dx12VertexBuffer(sizeof(DirectX::XMFLOAT4) * objNor.size(), objNor.size(), device));
+	uvs = new Dx12VertexBuffer(sizeof(DirectX::XMFLOAT2) * objUV.size(), objUV.size(), device);
+	ind = new Dx12IndexBuffer(sizeof(DWORD) * objInd.size(), objInd.size(), device);
+
+	pos[0]->setData(&objPos[0], sizeof(DirectX::XMFLOAT4) * objPos.size(), 0);
+	nor[0]->setData(&objNor[0], sizeof(DirectX::XMFLOAT4) * objNor.size(), 0);
+	uvs->setData(&objUV[0], sizeof(DirectX::XMFLOAT2) * objUV.size(), 0);
+	ind->setData(&objInd[0], sizeof(DWORD) * objInd.size(), 0);
+
+	geometryBuffers[POSITION] = { sizeof(DirectX::XMFLOAT4), objPos.size(), 0, pos[0] };
+	geometryBuffers[NORMAL] = { sizeof(DirectX::XMFLOAT4), objNor.size(), 0, nor[0] };
+	geometryBuffers[TEXCOORD] = { sizeof(DirectX::XMFLOAT2), objUV.size(), 0, uvs };
+	geometryBuffers[INDEXBUFF] = { sizeof(DWORD), objInd.size(), 0, ind };
+
+	for (int i = 1; i < keyframes; i++)
 	{
 		WaveFrontReader<DWORD> objLoader;
-		objLoader.Load((const wchar_t*)filename);
+		wchar_t fileNameBuffer[256];
+		swprintf_s(fileNameBuffer, L"%s%d.obj", filepath, i+1);
+		objLoader.Load(fileNameBuffer);
 		std::vector<DirectX::XMFLOAT4> objPos;
 		std::vector<DirectX::XMFLOAT4> objNor;
-		std::vector<DirectX::XMFLOAT2> objUV;
-		std::vector<DWORD> objInd = objLoader.indices;
 
 		for (auto work : objLoader.vertices)
 		{
 			objPos.push_back(DirectX::XMFLOAT4(work.position.x, work.position.y, work.position.z, 1.0f));
 			objNor.push_back(DirectX::XMFLOAT4(work.normal.x, work.normal.y, work.normal.z, 0.0f));
-			objUV.push_back(work.textureCoordinate);
 		}
 
 		pos.push_back(new Dx12VertexBuffer(sizeof(DirectX::XMFLOAT4) * objPos.size(), objPos.size(), device));
 		nor.push_back(new Dx12VertexBuffer(sizeof(DirectX::XMFLOAT4) * objNor.size(), objNor.size(), device));
-		uvs.push_back(new Dx12VertexBuffer(sizeof(DirectX::XMFLOAT2) * objUV.size(), objUV.size(), device));
-		ind.push_back(new Dx12IndexBuffer(sizeof(DWORD) * objInd.size(), objInd.size(), device));
 
 		pos[i]->setData(&objPos[0], sizeof(DirectX::XMFLOAT4) * objPos.size(), 0);
 		nor[i]->setData(&objNor[0], sizeof(DirectX::XMFLOAT4) * objNor.size(), 0);
-		uvs[i]->setData(&objUV[0], sizeof(DirectX::XMFLOAT2) * objUV.size(), 0);
-		ind[i]->setData(&objInd[0], sizeof(DWORD) * objInd.size(), 0);
 
-		geometryBuffers[POSITION] = { sizeof(DirectX::XMFLOAT4), objPos.size(), 0, pos[i] };
-		geometryBuffers[NORMAL] = { sizeof(DirectX::XMFLOAT4), objNor.size(), 0, nor[i] };
-		geometryBuffers[TEXCOORD] = { sizeof(DirectX::XMFLOAT2), objUV.size(), 0, uvs[i] };
-		geometryBuffers[INDEXBUFF] = { sizeof(DWORD), objInd.size(), 0, ind[i] };
+		geometryBuffers[POSITION + i*2] = { sizeof(DirectX::XMFLOAT4), objPos.size(), 0, pos[i] };
+		geometryBuffers[NORMAL + i*2] = { sizeof(DirectX::XMFLOAT4), objNor.size(), 0, nor[i] };
 	}
 }
 
@@ -148,18 +172,18 @@ void Dx12Mesh::createMesh(float* meshPos, float* meshNor, float* meshUV, DWORD *
 
 	pos.push_back(new Dx12VertexBuffer(sizeof(float4) * numVert, numVert, device));
 	nor.push_back(new Dx12VertexBuffer(sizeof(float4) * numVert, numVert, device));
-	uvs.push_back(new Dx12VertexBuffer(sizeof(float2) * numVert, numVert, device));
-	ind.push_back(new Dx12IndexBuffer(sizeof(DWORD) * numInd, numInd, device));
+	uvs = new Dx12VertexBuffer(sizeof(float2) * numVert, numVert, device);
+	ind = new Dx12IndexBuffer(sizeof(DWORD) * numInd, numInd, device);
 
 	pos[0]->setData(meshPos, sizeof(float4) * numVert, 0);
 	nor[0]->setData(meshNor, sizeof(float4) * numVert, 0);
-	uvs[0]->setData(meshUV, sizeof(float2) * numVert, 0);
-	ind[0]->setData(meshInd, sizeof(DWORD) * numInd, 0);
+	uvs->setData(meshUV, sizeof(float2) * numVert, 0);
+	ind->setData(meshInd, sizeof(DWORD) * numInd, 0);
 
 	geometryBuffers[POSITION] = { sizeof(float4), numVert, 0, pos[0] };
 	geometryBuffers[NORMAL] = { sizeof(float4), numVert, 0, nor[0] };
-	geometryBuffers[TEXCOORD] = { sizeof(float2), numVert, 0, uvs[0] };
-	geometryBuffers[INDEXBUFF] = { sizeof(DWORD), numInd, 0, ind[0] };
+	geometryBuffers[TEXCOORD] = { sizeof(float2), numVert, 0, uvs };
+	geometryBuffers[INDEXBUFF] = { sizeof(DWORD), numInd, 0, ind };
 }
 
 void Dx12Mesh::createCube()
