@@ -15,7 +15,7 @@ public:
 	~Dx12ConstantBuffer();
 	// set data will update the buffer associated, including whatever is necessary to
 	// update the GPU memory.
-	void setData(const void* data, size_t size, Material* m, unsigned int location);
+	void setData(const void* data, size_t size);
 	ID3D12Resource* getUploadHeap();
 	UINT8* getMappedBuffer();
 	

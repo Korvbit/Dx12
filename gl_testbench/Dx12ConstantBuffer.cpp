@@ -51,7 +51,7 @@ Dx12ConstantBuffer::~Dx12ConstantBuffer()
 	uploadHeap->Release();
 }
 
-void Dx12ConstantBuffer::setData(const void * data, size_t size, Material * m, unsigned int location)
+void Dx12ConstantBuffer::setData(const void * data, size_t size)
 {
 	memcpy(mappedBuffer, data, size);
 }

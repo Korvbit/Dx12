@@ -24,3 +24,16 @@ typedef union {
 	struct { float x, y; };
 	struct { float u, v; };
 } float2;
+
+enum RS_INDICES
+{
+	RS_TEXTURES,
+	RS_SAMPLERS,
+	RS_CB_WVP,
+	RS_CB_COLOR,
+	RS_SRV_KEYFRAME_CURRENT,
+	RS_SRV_KEYFRAME_NEXT,
+	RS_UAV_MESH_RESULT,
+	RS_CONSTANT_T,
+	RS_PARAM_COUNT
+};
