@@ -117,6 +117,26 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		SafeRelease(&adapter);
 	}
 
+#ifdef _DEBUG
+	//Enable the D3D12 debug layer.
+	ID3D12Debug* debugController = nullptr;
+#ifdef STATIC_LINK_DEBUGSTUFF
+	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+	{
+		debugController->EnableDebugLayer();
+	}
+	SafeRelease(debugController);
+#else
+	HMODULE mD3D12 = LoadLibrary(L"D3D12.dll");
+	PFN_D3D12_GET_DEBUG_INTERFACE f = (PFN_D3D12_GET_DEBUG_INTERFACE)GetProcAddress(mD3D12, "D3D12GetDebugInterface");
+	if (SUCCEEDED(f(IID_PPV_ARGS(&debugController))))
+	{
+		debugController->EnableDebugLayer();
+	}
+	SafeRelease(&debugController);
+#endif
+#endif
+
 	// Create Device
 	if (adapter) {
 		D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&device));
@@ -283,14 +303,14 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	dtRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
 	dtRanges[1].NumDescriptors = 1;
 	dtRanges[1].BaseShaderRegister = 0;
-	dtRanges[1].RegisterSpace = 1;		// Pixel shader register space
+	dtRanges[1].RegisterSpace = 0;		// Pixel shader register space
 	dtRanges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	D3D12_DESCRIPTOR_RANGE samplerRanges[1];
 	samplerRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
 	samplerRanges[0].NumDescriptors = 1;
 	samplerRanges[0].BaseShaderRegister = 0;
-	samplerRanges[0].RegisterSpace = 1;	// Pixel shader register space
+	samplerRanges[0].RegisterSpace = 0;	// Pixel shader register space
 	samplerRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	// Create descriptor table
@@ -311,14 +331,14 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	rootVertexDescriptor.ShaderRegister = 0;
 
 	D3D12_ROOT_DESCRIPTOR rootPixelDescriptor;
-	rootVertexDescriptor.RegisterSpace = 1;
-	rootVertexDescriptor.ShaderRegister = 0;
+	rootPixelDescriptor.RegisterSpace = 0;
+	rootPixelDescriptor.ShaderRegister = 0;
 
 	D3D12_ROOT_DESCRIPTOR rootComputeDescriptor;
-	rootComputeDescriptor.RegisterSpace = 2;
+	rootComputeDescriptor.RegisterSpace = 0;
 	rootComputeDescriptor.ShaderRegister = 0;
 	
-	// Create root parameter
+	// Create root parameters
 	// Descriptor tables
 	D3D12_ROOT_PARAMETER rootParam[RS_PARAM_COUNT];
 	rootParam[RS_TEXTURES].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;

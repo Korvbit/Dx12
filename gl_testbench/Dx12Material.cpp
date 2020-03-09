@@ -31,7 +31,7 @@ void Dx12Material::addConstantBuffer(unsigned int location)
 
 void Dx12Material::updateConstantBuffer(const void * data, size_t size, unsigned int location)
 {
-	constantBuffers[location]->setData(data, size, this, location);
+	constantBuffers[location]->setData(data, size);
 }
 
 void Dx12Material::compileShader(ShaderType type)
@@ -44,7 +44,7 @@ void Dx12Material::compileShader(ShaderType type)
 			nullptr,
 			nullptr,
 			"VS_main",
-			"vs_5_0",
+			"vs_5_1",
 			0,
 			0,
 			&vertexBlob,
@@ -59,7 +59,7 @@ void Dx12Material::compileShader(ShaderType type)
 			nullptr,
 			nullptr,
 			"PS_main",
-			"ps_5_0",
+			"ps_5_1",
 			0,
 			0,
 			&pixelBlob,

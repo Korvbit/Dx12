@@ -9,7 +9,7 @@ struct VSout {
 	float2 texCoords	: TEXCOORD;
 };
 
-cbuffer wvpMatrix : register(b0, space0) {
+cbuffer wvpMatrix : register(b0) {
 	float4x4 wvpMat;
 }
 
