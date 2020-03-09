@@ -13,10 +13,14 @@ cbuffer wvpMatrix : register(b0, space0) {
 	float4x4 wvpMat;
 }
 
+//StructuredBuffer<float4> posData : register(t0, space0);
+
 VSout VS_main(VSin input, uint index : SV_VertexID) {
 	VSout output = (VSout)0;
 	output.pos = mul(input.pos, wvpMat);
 	output.texCoords = input.texCoords;
+
+	//float4 pos = posData[index];
 
 	return output;
 }

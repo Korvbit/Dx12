@@ -29,6 +29,8 @@ public:
 
 	// translation buffers
 	ConstantBuffer* wvpBuffer;
+	ConstantBuffer* keyframePosBuffer;
+	ConstantBuffer* keyframeNorBuffer;
 	// local copy of the translation
 	Transform* transform;
 

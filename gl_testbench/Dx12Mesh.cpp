@@ -66,7 +66,11 @@ void Dx12Mesh::Update(Camera* camera)
 	DirectX::XMStoreFloat4x4(&wvpMatrix, DirectX::XMMatrixTranspose(tmpMat));
 
 	// Upload wvpMatrix
-	wvpBuffer->setData(&wvpMatrix, sizeof(wvpMatrix), technique->getMaterial(), TRANSLATION);
+	wvpBuffer->setData(&wvpMatrix, sizeof(wvpMatrix));
+
+	// Upload the next keyframe
+	//keyframePosBuffer->setData(&pos[0], pos.size * sizeof(VertexBuffer*));
+	//keyframeNorBuffer->setData(&nor[0], nor.size * sizeof(VertexBuffer*));
 }
 
 void Dx12Mesh::scaleMesh(float3 scale)
@@ -118,7 +122,7 @@ void Dx12Mesh::incKeyframe()
 	currentKeyframe = (currentKeyframe + (int)keyFrameInc) % nrOfKeyframes;
 	if (keyFrameInc >= 1.0f)
 	{
-		keyFrameInc = 0.0f;
+		keyFrameInc -= 1.0f;
 	}
 }
 

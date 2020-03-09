@@ -31,7 +31,7 @@ void Dx12Material::addConstantBuffer(unsigned int location)
 
 void Dx12Material::updateConstantBuffer(const void * data, size_t size, unsigned int location)
 {
-	constantBuffers[location]->setData(data, size, this, location);
+	constantBuffers[location]->setData(data, size);
 }
 
 void Dx12Material::compileShader(ShaderType type)

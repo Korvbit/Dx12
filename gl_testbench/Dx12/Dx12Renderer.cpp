@@ -117,6 +117,26 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		SafeRelease(&adapter);
 	}
 
+#ifdef _DEBUG
+	//Enable the D3D12 debug layer.
+	ID3D12Debug* debugController = nullptr;
+#ifdef STATIC_LINK_DEBUGSTUFF
+	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+	{
+		debugController->EnableDebugLayer();
+	}
+	SafeRelease(debugController);
+#else
+	HMODULE mD3D12 = LoadLibrary(L"D3D12.dll");
+	PFN_D3D12_GET_DEBUG_INTERFACE f = (PFN_D3D12_GET_DEBUG_INTERFACE)GetProcAddress(mD3D12, "D3D12GetDebugInterface");
+	if (SUCCEEDED(f(IID_PPV_ARGS(&debugController))))
+	{
+		debugController->EnableDebugLayer();
+	}
+	SafeRelease(&debugController);
+#endif
+#endif
+
 	// Create Device
 	if (adapter) {
 		D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&device));
@@ -352,14 +372,17 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	// Create root signature
 	D3D12_ROOT_SIGNATURE_DESC rsDesc;
 	rsDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	rsDesc.NumParameters = ARRAYSIZE(rootParam);
+	rsDesc.NumParameters = RS_PARAM_COUNT;
 	rsDesc.pParameters = rootParam;
 	rsDesc.NumStaticSamplers = 0;
 	rsDesc.pStaticSamplers = nullptr;
 
-	ID3DBlob* sBlob;
-	D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
-
+	ID3DBlob* sBlob, *errorBlob;
+	if (FAILED(D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, &errorBlob)))
+	{
+		OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+		errorBlob->Release();
+	}
 	device->CreateRootSignature(0, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	rootSignature->SetName(L"RootSignature");
 
@@ -563,11 +586,12 @@ void Dx12Renderer::frame()
 			commandList->IASetIndexBuffer(iBuffer->getView());
 
 			mesh->incKeyframe();
-			if (mesh)
 
 			cBuffer = (Dx12ConstantBuffer*)(mesh->wvpBuffer);
 			commandList->SetGraphicsRootConstantBufferView(RS_CB_WVP, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
 			commandList->DrawIndexedInstanced(numberIndices, 1, 0, 0, 0);
+
+			// Unbind textures
 			for (auto t : mesh->textures)
 			{
 				texture = (Dx12Texture2D*)(t.second);
