@@ -384,15 +384,18 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	rsDesc.NumStaticSamplers = 0;
 	rsDesc.pStaticSamplers = nullptr;
 
-	ID3DBlob* sBlob;
-	D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
-
+	ID3DBlob* sBlob, *errorBlob;
+	if (FAILED(D3D12SerializeRootSignature(&rsDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, &errorBlob)))
+	{
+		OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+		errorBlob->Release();
+	}
 	device->CreateRootSignature(0, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	rootSignature->SetName(L"RootSignature");
 
 	// Compute stuff
-	rootParam[RS_TEXTURES].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
+	//rootParam[RS_TEXTURES].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	
 	CD3DX12_ROOT_SIGNATURE_DESC computeRootSignatureDesc(RS_PARAM_COUNT, rootParam, 0, nullptr);
 	D3D12SerializeRootSignature(&computeRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
 	device->CreateRootSignature(0, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), IID_PPV_ARGS(&computeRootSignature));

@@ -25,6 +25,14 @@ typedef union {
 	struct { float u, v; };
 } float2;
 
+enum REGISTER_SPACES
+{
+	SPACE_VERTEX,
+	SPACE_PIXEL,
+	SPACE_COMPUTE,
+	NUM_REGISTER_SPACES
+};
+
 enum RS_INDICES
 {
 	RS_TEXTURES,

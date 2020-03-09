@@ -69,8 +69,8 @@ void Dx12Mesh::Update(Camera* camera)
 	wvpBuffer->setData(&wvpMatrix, sizeof(wvpMatrix));
 
 	// Upload the next keyframe
-	keyframePosBuffer->setData(pos[0], sizeof(pos));
-	keyframeNorBuffer->setData(&nor[0], sizeof(pos));
+	//keyframePosBuffer->setData(&pos[0], pos.size * sizeof(VertexBuffer*));
+	//keyframeNorBuffer->setData(&nor[0], nor.size * sizeof(VertexBuffer*));
 }
 
 void Dx12Mesh::scaleMesh(float3 scale)
