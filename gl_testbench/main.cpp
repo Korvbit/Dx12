@@ -74,7 +74,7 @@ void run() {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		/*if (msg.message == WM_MOUSEMOVE)
+		if (msg.message == WM_MOUSEMOVE)
 		{
 			POINT pos;
 			pos.x = GET_X_LPARAM(msg.lParam);
@@ -85,7 +85,7 @@ void run() {
 			int diffY = pos.y - center.y;
 			camera->rotate(diffX, diffY);
 			SetCursorPos(center.x, center.y);
-		}*/
+		}
 		if (msg.message == WM_KEYDOWN)
 		{
 			if (msg.wParam == KEY_P)
@@ -273,7 +273,7 @@ int initialiseTestbench()
 		Mesh* m = renderer->makeMesh();
 
 		{
-			m->createMeshFromObj(L"../assets/Laptop Keyframes/", 250);
+			m->createMeshFromObj(L"../assets/Laptop Keyframes/", 2);
 			m->setScale({0.04f, 0.04f, 0.04f});
 		}
 

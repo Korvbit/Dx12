@@ -274,65 +274,80 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	scissorRect.bottom = height;
 
 	// Define descriptor(table) ranges
-	D3D12_DESCRIPTOR_RANGE dtRanges[2];
+	D3D12_DESCRIPTOR_RANGE dtRanges[1];
 	dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	dtRanges[0].NumDescriptors = 1;
 	dtRanges[0].BaseShaderRegister = 0;
-	dtRanges[0].RegisterSpace = 0;
+	dtRanges[0].RegisterSpace = 1;
 	dtRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-	dtRanges[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-	dtRanges[1].NumDescriptors = 1;
-	dtRanges[1].BaseShaderRegister = 0;
-	dtRanges[1].RegisterSpace = 0;
-	dtRanges[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	D3D12_DESCRIPTOR_RANGE samplerRanges[1];
 	samplerRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
 	samplerRanges[0].NumDescriptors = 1;
 	samplerRanges[0].BaseShaderRegister = 0;
-	samplerRanges[0].RegisterSpace = 0;
+	samplerRanges[0].RegisterSpace = 1;
 	samplerRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	// Create descriptor table
-	D3D12_ROOT_DESCRIPTOR_TABLE dt[2];
-	dt[0].NumDescriptorRanges = 1;
-	dt[0].pDescriptorRanges = &dtRanges[0];
-
-	dt[1].NumDescriptorRanges = 1;
-	dt[1].pDescriptorRanges = &dtRanges[1];
+	D3D12_ROOT_DESCRIPTOR_TABLE dt;
+	dt.NumDescriptorRanges = 1;
+	dt.pDescriptorRanges = dtRanges;
 
 	D3D12_ROOT_DESCRIPTOR_TABLE dtSampler;
 	dtSampler.NumDescriptorRanges = ARRAYSIZE(samplerRanges);
 	dtSampler.pDescriptorRanges = samplerRanges;
 
 	// Create Constant Buffer root descriptor
-	D3D12_ROOT_DESCRIPTOR rootCBVDescriptor;
-	rootCBVDescriptor.RegisterSpace = 0;
-	rootCBVDescriptor.ShaderRegister = 0;
+	D3D12_ROOT_DESCRIPTOR rootVertexDescriptor;
+	rootVertexDescriptor.RegisterSpace = 0;
+	rootVertexDescriptor.ShaderRegister = 0;
+
+	D3D12_ROOT_DESCRIPTOR rootPixelDescriptor;
+	rootPixelDescriptor.RegisterSpace = 1;
+	rootPixelDescriptor.ShaderRegister = 0;
+
+	D3D12_ROOT_DESCRIPTOR rootComputeDescriptor;
+	rootComputeDescriptor.RegisterSpace = 2;
+	rootComputeDescriptor.ShaderRegister = 0;
 	
 	// Create root parameter
-	D3D12_ROOT_PARAMETER rootParam[5];
-	rootParam[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[0].DescriptorTable = dt[0];
-	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	D3D12_ROOT_PARAMETER rootParam[RS_PARAM_COUNT];
+	rootParam[RS_TEXTURES].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParam[RS_TEXTURES].DescriptorTable = dt;
+	rootParam[RS_TEXTURES].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	rootParam[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[1].DescriptorTable = dtSampler;
-	rootParam[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParam[RS_SAMPLERS].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	rootParam[RS_SAMPLERS].DescriptorTable = dtSampler;
+	rootParam[RS_SAMPLERS].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	rootParam[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParam[2].Descriptor = rootCBVDescriptor;
-	rootParam[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+	rootParam[RS_CB_WVP].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParam[RS_CB_WVP].Descriptor = rootVertexDescriptor;
+	rootParam[RS_CB_WVP].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
-	rootCBVDescriptor.ShaderRegister = 1;
+	rootParam[RS_CB_COLOR].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParam[RS_CB_COLOR].Descriptor = rootPixelDescriptor;
+	rootParam[RS_CB_COLOR].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	rootParam[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParam[3].Descriptor = rootCBVDescriptor;
-	rootParam[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParam[RS_SRV_KEYFRAME_CURRENT].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	rootParam[RS_SRV_KEYFRAME_CURRENT].Descriptor.RegisterSpace = 2;
+	rootParam[RS_SRV_KEYFRAME_CURRENT].Descriptor.ShaderRegister = 0;
+	rootParam[RS_SRV_KEYFRAME_CURRENT].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-	rootParam[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[4].DescriptorTable = dt[1];
-	rootParam[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	rootParam[RS_SRV_KEYFRAME_NEXT].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	rootParam[RS_SRV_KEYFRAME_CURRENT].Descriptor.RegisterSpace = 2;
+	rootParam[RS_SRV_KEYFRAME_CURRENT].Descriptor.ShaderRegister = 1;
+	rootParam[RS_SRV_KEYFRAME_NEXT].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	rootParam[RS_UAV_MESH_RESULT].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+	rootParam[RS_SRV_KEYFRAME_CURRENT].Descriptor.RegisterSpace = 2;
+	rootParam[RS_SRV_KEYFRAME_CURRENT].Descriptor.ShaderRegister = 2;
+	rootParam[RS_UAV_MESH_RESULT].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	rootParam[RS_CONSTANT_T].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+	rootParam[RS_CONSTANT_T].Constants.Num32BitValues = 1;
+	rootParam[RS_CONSTANT_T].Constants.RegisterSpace = 2;
+	rootParam[RS_CONSTANT_T].Constants.ShaderRegister = 3;
+	rootParam[RS_CONSTANT_T].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	// Create root signature
 	D3D12_ROOT_SIGNATURE_DESC rsDesc;
@@ -349,12 +364,50 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	rootSignature->SetName(L"RootSignature");
 
 	// Compute stuff
-	rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	//rootParam[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	CD3DX12_ROOT_SIGNATURE_DESC computeRootSignatureDesc(ARRAYSIZE(rootParam), rootParam, 0, nullptr);
 	D3D12SerializeRootSignature(&computeRootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, nullptr);
 	device->CreateRootSignature(0, sBlob->GetBufferPointer(), sBlob->GetBufferSize(), IID_PPV_ARGS(&computeRootSignature));
 	rootSignature->SetName(L"ComputeRootSignature");
+
+	D3D12_COMMAND_QUEUE_DESC queueDesc = { D3D12_COMMAND_LIST_TYPE_COMPUTE, 0, D3D12_COMMAND_QUEUE_FLAG_NONE };
+	device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&computeCommandQueue));
+
+	for (int i = 0; i < frameBufferCount; ++i)
+	{
+		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&computeCommandAllocator[i]));
+	}
+	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, computeCommandAllocator[0], nullptr, IID_PPV_ARGS(&computeCommandList));
+	computeCommandList->Close();
+
+	#if defined(_DEBUG)
+		// Enable better shader debugging with the graphics debugging tools.
+		UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+	#else
+		UINT compileFlags = 0;
+	#endif
+
+	ID3DBlob* computeBlob;
+
+	D3DCompileFromFile(
+		L"ComputeShader.hlsl",
+		nullptr,
+		nullptr,
+		"CS_main",
+		"cs_5_1",
+		compileFlags,
+		0,
+		&computeBlob,
+		nullptr
+	);
+
+	D3D12_COMPUTE_PIPELINE_STATE_DESC computePSODesc = {};
+	computePSODesc.pRootSignature = computeRootSignature;
+	computePSODesc.CS.pShaderBytecode = reinterpret_cast<void*>(computeBlob->GetBufferPointer());
+	computePSODesc.CS.BytecodeLength = computeBlob->GetBufferSize();
+
+	device->CreateComputePipelineState(&computePSODesc, IID_PPV_ARGS(&computeState));
 
 	// Create constant buffer ================================================
 
@@ -428,6 +481,15 @@ void Dx12Renderer::frame()
 {
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
+	computeCommandAllocator[frameIndex]->Reset();
+	computeCommandList->Reset(computeCommandAllocator[frameIndex], computeState);
+
+	computeCommandList->SetPipelineState(computeState);
+	computeCommandList->SetComputeRootSignature(computeRootSignature);
+	computeCommandList->Dispatch(1, 1, 1);
+
+	computeCommandList->Close();
+
 	commandAllocator[frameIndex]->Reset();
 	commandList->Reset(commandAllocator[frameIndex], NULL);
 
@@ -475,7 +537,7 @@ void Dx12Renderer::frame()
 		material = (Dx12Material*)(work.first->getMaterial());
 		renderState = (Dx12RenderState*)(work.first->getRenderState());
 
-		commandList->SetGraphicsRootConstantBufferView(3, material->constantBuffers[DIFFUSE_TINT]->getUploadHeap()->GetGPUVirtualAddress());
+		commandList->SetGraphicsRootConstantBufferView(RS_CB_COLOR, material->constantBuffers[DIFFUSE_TINT]->getUploadHeap()->GetGPUVirtualAddress());
 		commandList->SetPipelineState(renderState->getPSO());
 		for (auto mesh : work.second)
 		{
@@ -489,8 +551,8 @@ void Dx12Renderer::frame()
 				ID3D12DescriptorHeap* descriptorHeaps[] = { texture->getDescriptorHeap(), sampler->getDescriptorHeap() };
 				commandList->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
 
-				commandList->SetGraphicsRootDescriptorTable(0, texture->getDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
-				commandList->SetGraphicsRootDescriptorTable(1, sampler->getDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+				commandList->SetGraphicsRootDescriptorTable(RS_TEXTURES, texture->getDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+				commandList->SetGraphicsRootDescriptorTable(RS_SAMPLERS, sampler->getDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 			}
 			vBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[POSITION + (mesh->getCurrentKeyframe() * 2)].buffer);
 			nBuffer = (Dx12VertexBuffer*)(mesh->geometryBuffers[NORMAL + (mesh->getCurrentKeyframe() * 2)].buffer);
@@ -504,7 +566,7 @@ void Dx12Renderer::frame()
 			if (mesh)
 
 			cBuffer = (Dx12ConstantBuffer*)(mesh->wvpBuffer);
-			commandList->SetGraphicsRootConstantBufferView(2, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
+			commandList->SetGraphicsRootConstantBufferView(RS_CB_WVP, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
 			commandList->DrawIndexedInstanced(numberIndices, 1, 0, 0, 0);
 			for (auto t : mesh->textures)
 			{
@@ -513,7 +575,7 @@ void Dx12Renderer::frame()
 				ID3D12DescriptorHeap* descriptorHeaps[] = { texture->getNullDescriptorHeap() };
 				commandList->SetDescriptorHeaps(ARRAYSIZE(descriptorHeaps), descriptorHeaps);
 
-				commandList->SetGraphicsRootDescriptorTable(0, texture->getNullDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+				commandList->SetGraphicsRootDescriptorTable(RS_TEXTURES, texture->getNullDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 			}
 		}
 	}

@@ -1,7 +1,7 @@
-Texture2D tex : register(t0);
-SamplerState samp : register(s0);
+Texture2D tex : register(t0, space1);
+SamplerState samp : register(s0, space1);
 
-cbuffer diffuse : register(b1) {
+cbuffer diffuse : register(b0, space1) {
 	float R, G, B, A;
 }
 

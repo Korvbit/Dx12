@@ -42,9 +42,13 @@ public:
 	ID3D12Resource* renderTargets[frameBufferCount];
 	ID3D12Resource* depthStencilBuffer;
 	ID3D12CommandQueue* commandQueue;
+	ID3D12CommandQueue* computeCommandQueue;
 	ID3D12CommandAllocator* commandAllocator[frameBufferCount];
 	ID3D12GraphicsCommandList* commandList;
+	ID3D12CommandAllocator* computeCommandAllocator[frameBufferCount];
+	ID3D12GraphicsCommandList* computeCommandList;
 	ID3D12Fence* fence[frameBufferCount];
+	ID3D12PipelineState* computeState;
 	UINT64 fenceValue[frameBufferCount];
 	HANDLE fenceEvent;
 	IDXGISwapChain3* swapChain;
