@@ -294,79 +294,71 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	scissorRect.bottom = height;
 
 	// Define descriptor(table) ranges
-	D3D12_DESCRIPTOR_RANGE dtRanges[1];
-	dtRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	dtRanges[0].NumDescriptors = 1;
-	dtRanges[0].BaseShaderRegister = 0;
-	dtRanges[0].RegisterSpace = 1;
-	dtRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	D3D12_DESCRIPTOR_RANGE textureDescriptorTableRange;
+	textureDescriptorTableRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	textureDescriptorTableRange.NumDescriptors = 1;
+	textureDescriptorTableRange.BaseShaderRegister = 0;
+	textureDescriptorTableRange.RegisterSpace = SPACE_PIXEL;
+	textureDescriptorTableRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-	D3D12_DESCRIPTOR_RANGE samplerRanges[1];
-	samplerRanges[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-	samplerRanges[0].NumDescriptors = 1;
-	samplerRanges[0].BaseShaderRegister = 0;
-	samplerRanges[0].RegisterSpace = 1;
-	samplerRanges[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
-	// Create descriptor table
-	D3D12_ROOT_DESCRIPTOR_TABLE dt;
-	dt.NumDescriptorRanges = 1;
-	dt.pDescriptorRanges = dtRanges;
-
-	D3D12_ROOT_DESCRIPTOR_TABLE dtSampler;
-	dtSampler.NumDescriptorRanges = ARRAYSIZE(samplerRanges);
-	dtSampler.pDescriptorRanges = samplerRanges;
-
-	// Create Constant Buffer root descriptor
-	D3D12_ROOT_DESCRIPTOR rootVertexDescriptor;
-	rootVertexDescriptor.RegisterSpace = 0;
-	rootVertexDescriptor.ShaderRegister = 0;
-
-	D3D12_ROOT_DESCRIPTOR rootPixelDescriptor;
-	rootPixelDescriptor.RegisterSpace = 1;
-	rootPixelDescriptor.ShaderRegister = 0;
-
-	D3D12_ROOT_DESCRIPTOR rootComputeDescriptor;
-	rootComputeDescriptor.RegisterSpace = 2;
-	rootComputeDescriptor.ShaderRegister = 0;
+	D3D12_DESCRIPTOR_RANGE samplerDescriptorTableRange;
+	samplerDescriptorTableRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+	samplerDescriptorTableRange.NumDescriptors = 1;
+	samplerDescriptorTableRange.BaseShaderRegister = 0;
+	samplerDescriptorTableRange.RegisterSpace = SPACE_PIXEL;
+	samplerDescriptorTableRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 	
-	// Create root parameter
+	// Create root parameters
 	D3D12_ROOT_PARAMETER rootParam[RS_PARAM_COUNT];
 	rootParam[RS_TEXTURES].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[RS_TEXTURES].DescriptorTable = dt;
+	rootParam[RS_TEXTURES].DescriptorTable.NumDescriptorRanges = 1;
+	rootParam[RS_TEXTURES].DescriptorTable.pDescriptorRanges = &textureDescriptorTableRange;
 	rootParam[RS_TEXTURES].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParam[RS_SAMPLERS].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-	rootParam[RS_SAMPLERS].DescriptorTable = dtSampler;
+	rootParam[RS_SAMPLERS].DescriptorTable.NumDescriptorRanges = 1;
+	rootParam[RS_SAMPLERS].DescriptorTable.pDescriptorRanges = &samplerDescriptorTableRange;
 	rootParam[RS_SAMPLERS].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	rootParam[RS_CB_WVP].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParam[RS_CB_WVP].Descriptor = rootVertexDescriptor;
+	rootParam[RS_CB_WVP].Descriptor.RegisterSpace = SPACE_VERTEX;
+	rootParam[RS_CB_WVP].Descriptor.ShaderRegister = 0;
 	rootParam[RS_CB_WVP].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 
 	rootParam[RS_CB_COLOR].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-	rootParam[RS_CB_COLOR].Descriptor = rootPixelDescriptor;
+	rootParam[RS_CB_COLOR].Descriptor.RegisterSpace = SPACE_PIXEL;
+	rootParam[RS_CB_COLOR].Descriptor.ShaderRegister = 0;
 	rootParam[RS_CB_COLOR].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
-	rootParam[RS_SRV_KEYFRAME_CURRENT].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
-	rootParam[RS_SRV_KEYFRAME_CURRENT].Descriptor.RegisterSpace = 2;
-	rootParam[RS_SRV_KEYFRAME_CURRENT].Descriptor.ShaderRegister = 0;
-	rootParam[RS_SRV_KEYFRAME_CURRENT].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	rootParam[RS_SRV_KEYFRAME_CURRENT_POS].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	rootParam[RS_SRV_KEYFRAME_CURRENT_POS].Descriptor.RegisterSpace = SPACE_COMPUTE;
+	rootParam[RS_SRV_KEYFRAME_CURRENT_POS].Descriptor.ShaderRegister = 0;
+	rootParam[RS_SRV_KEYFRAME_CURRENT_POS].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-	rootParam[RS_SRV_KEYFRAME_NEXT].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
-	rootParam[RS_SRV_KEYFRAME_CURRENT].Descriptor.RegisterSpace = 2;
-	rootParam[RS_SRV_KEYFRAME_CURRENT].Descriptor.ShaderRegister = 1;
-	rootParam[RS_SRV_KEYFRAME_NEXT].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	rootParam[RS_SRV_KEYFRAME_CURRENT_NOR].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	rootParam[RS_SRV_KEYFRAME_CURRENT_NOR].Descriptor.RegisterSpace = SPACE_COMPUTE;
+	rootParam[RS_SRV_KEYFRAME_CURRENT_NOR].Descriptor.ShaderRegister = 1;
+	rootParam[RS_SRV_KEYFRAME_CURRENT_NOR].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	rootParam[RS_SRV_KEYFRAME_NEXT_POS].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	rootParam[RS_SRV_KEYFRAME_NEXT_POS].Descriptor.RegisterSpace = SPACE_COMPUTE;
+	rootParam[RS_SRV_KEYFRAME_NEXT_POS].Descriptor.ShaderRegister = 2;
+	rootParam[RS_SRV_KEYFRAME_NEXT_POS].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	rootParam[RS_SRV_KEYFRAME_NEXT_NOR].ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
+	rootParam[RS_SRV_KEYFRAME_NEXT_NOR].Descriptor.RegisterSpace = SPACE_COMPUTE;
+	rootParam[RS_SRV_KEYFRAME_NEXT_NOR].Descriptor.ShaderRegister = 3;
+	rootParam[RS_SRV_KEYFRAME_NEXT_NOR].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	rootParam[RS_UAV_MESH_RESULT].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
-	rootParam[RS_SRV_KEYFRAME_CURRENT].Descriptor.RegisterSpace = 2;
-	rootParam[RS_SRV_KEYFRAME_CURRENT].Descriptor.ShaderRegister = 2;
+	rootParam[RS_UAV_MESH_RESULT].Descriptor.RegisterSpace = SPACE_COMPUTE;
+	rootParam[RS_UAV_MESH_RESULT].Descriptor.ShaderRegister = 0;
 	rootParam[RS_UAV_MESH_RESULT].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	rootParam[RS_CONSTANT_T].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 	rootParam[RS_CONSTANT_T].Constants.Num32BitValues = 1;
-	rootParam[RS_CONSTANT_T].Constants.RegisterSpace = 2;
-	rootParam[RS_CONSTANT_T].Constants.ShaderRegister = 3;
+	rootParam[RS_CONSTANT_T].Constants.RegisterSpace = SPACE_COMPUTE;
+	rootParam[RS_CONSTANT_T].Constants.ShaderRegister = 0;
 	rootParam[RS_CONSTANT_T].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	// Create root signature
@@ -589,6 +581,15 @@ void Dx12Renderer::frame()
 
 			cBuffer = (Dx12ConstantBuffer*)(mesh->wvpBuffer);
 			commandList->SetGraphicsRootConstantBufferView(RS_CB_WVP, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
+			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataCurrent());
+			commandList->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_CURRENT_POS, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
+			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getNorDataCurrent());
+			commandList->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_CURRENT_NOR, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
+			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataNext());
+			commandList->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_NEXT_POS, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
+			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataNext());
+			commandList->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_NEXT_NOR, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
+
 			commandList->DrawIndexedInstanced(numberIndices, 1, 0, 0, 0);
 
 			// Unbind textures

@@ -51,3 +51,8 @@ D3D12_VERTEX_BUFFER_VIEW * Dx12VertexBuffer::getView()
 {
 	return &view;
 }
+
+ID3D12Resource * Dx12VertexBuffer::getUploadHeap()
+{
+	return buffer;
+}

@@ -116,6 +116,32 @@ int Dx12Mesh::getCurrentKeyframe()
 	return currentKeyframe;
 }
 
+VertexBuffer * Dx12Mesh::getPosDataCurrent()
+{
+	return pos[currentKeyframe];
+}
+
+VertexBuffer * Dx12Mesh::getNorDataCurrent()
+{
+	return nor[currentKeyframe];
+}
+
+VertexBuffer * Dx12Mesh::getPosDataNext()
+{
+	if (currentKeyframe >= nrOfKeyframes - 1)
+		return pos[0];
+	else
+		return pos[currentKeyframe + 1];
+}
+
+VertexBuffer * Dx12Mesh::getNorDataNext()
+{
+	if (currentKeyframe >= nrOfKeyframes - 1)
+		return nor[0];
+	else
+		return nor[currentKeyframe + 1];
+}
+
 void Dx12Mesh::incKeyframe()
 {
 	keyFrameInc += 0.01;

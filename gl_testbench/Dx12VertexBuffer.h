@@ -11,6 +11,7 @@ public:
 	~Dx12VertexBuffer();
 	void setData(const void* data, size_t size, size_t offset);
 	D3D12_VERTEX_BUFFER_VIEW* getView();
+	ID3D12Resource* getUploadHeap();
 
 private:
 	ID3D12Device* device;

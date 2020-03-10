@@ -36,6 +36,10 @@ public:
 	void setTranslation(float3 translation);
 
 	int getCurrentKeyframe();
+	VertexBuffer* getPosDataCurrent();
+	VertexBuffer* getNorDataCurrent();
+	VertexBuffer* getPosDataNext();
+	VertexBuffer* getNorDataNext();
 	void incKeyframe();
 	void setCurrentKeyframe(int keyframe);
 
