@@ -144,12 +144,17 @@ VertexBuffer * Dx12Mesh::getNorDataNext()
 
 void Dx12Mesh::incKeyframe()
 {
-	keyFrameInc += 0.01;
+	keyFrameInc += 0.02;
 	currentKeyframe = (currentKeyframe + (int)keyFrameInc) % nrOfKeyframes;
 	if (keyFrameInc >= 1.0f)
 	{
 		keyFrameInc -= 1.0f;
 	}
+}
+
+float Dx12Mesh::getKeyFrameT()
+{
+	return keyFrameInc;
 }
 
 void Dx12Mesh::setCurrentKeyframe(int keyframe)

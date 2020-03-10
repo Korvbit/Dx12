@@ -41,6 +41,7 @@ public:
 	VertexBuffer* getPosDataNext();
 	VertexBuffer* getNorDataNext();
 	void incKeyframe();
+	float getKeyFrameT();
 	void setCurrentKeyframe(int keyframe);
 
 	void createMeshFromObj(const wchar_t* filepath, unsigned int keyframes);

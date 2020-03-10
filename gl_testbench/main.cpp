@@ -195,8 +195,8 @@ int initialiseTestbench()
 	renderState1->setWireFrame(true);
 
 	// basic technique
-	techniques.push_back(renderer->makeTechnique(materials[0], renderer->makeRenderState()));
-	techniques.push_back(renderer->makeTechnique(materials[1], renderState1));
+	techniques.push_back(renderer->makeTechnique(materials[0], renderState1));
+	techniques.push_back(renderer->makeTechnique(materials[1], renderer->makeRenderState()));
 	techniques.push_back(renderer->makeTechnique(materials[2], renderer->makeRenderState()));
 	techniques.push_back(renderer->makeTechnique(materials[3], renderer->makeRenderState()));
 
@@ -273,8 +273,8 @@ int initialiseTestbench()
 		Mesh* m = renderer->makeMesh();
 
 		{
-			m->createMeshFromObj(L"../assets/Laptop Keyframes/", 2);
-			m->setScale({0.04f, 0.04f, 0.04f});
+			m->createMeshFromObj(L"../assets/Laptop Keyframes/", 250);
+			m->setScale({0.08f, 0.08f, 0.08f});
 		}
 
 		// we can create a constant buffer outside the material, for example as part of the Mesh.
@@ -292,6 +292,7 @@ int initialiseTestbench()
 void shutdown() {
 	// shutdown.
 	// delete dynamic objects
+	delete renderer;
 	for (auto m : materials)
 	{
 		delete(m);
@@ -316,8 +317,6 @@ void shutdown() {
 	}
 
 	delete camera;
-
-	delete renderer;
 };
 
 int main(int argc, char *argv[])

@@ -392,6 +392,9 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	for (int i = 0; i < frameBufferCount; ++i)
 	{
 		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&computeCommandAllocator[i]));
+		wchar_t name[256];
+		swprintf_s(name, L"ComputeCommandAllocator%d", i);
+		computeCommandAllocator[i]->SetName(name);
 	}
 	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE, computeCommandAllocator[0], nullptr, IID_PPV_ARGS(&computeCommandList));
 	computeCommandList->Close();
@@ -455,6 +458,16 @@ void Dx12Renderer::present()
 
 int Dx12Renderer::shutdown()
 {
+	// Signal when the fence has increased in value
+	const UINT64 signalValue = fenceValue[frameIndex];
+	computeCommandQueue->Signal(fence[frameIndex], signalValue);
+	fenceValue[frameIndex]++; // Increment the comparison value inbefore the next call
+
+	// Wait until the value has been incremented
+	if (fence[frameIndex]->GetCompletedValue() < signalValue) {
+		fence[frameIndex]->SetEventOnCompletion(signalValue, fenceEvent);
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
 	SafeRelease(&rootSignature);
 
 	SafeRelease(&device);
@@ -496,15 +509,14 @@ void Dx12Renderer::frame()
 {
 	frameIndex = swapChain->GetCurrentBackBufferIndex();
 
+	// Compute
 	computeCommandAllocator[frameIndex]->Reset();
 	computeCommandList->Reset(computeCommandAllocator[frameIndex], computeState);
 
 	computeCommandList->SetPipelineState(computeState);
 	computeCommandList->SetComputeRootSignature(computeRootSignature);
-	computeCommandList->Dispatch(1, 1, 1);
 
-	computeCommandList->Close();
-
+	// Graphics
 	commandAllocator[frameIndex]->Reset();
 	commandList->Reset(commandAllocator[frameIndex], NULL);
 
@@ -590,6 +602,9 @@ void Dx12Renderer::frame()
 			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataNext());
 			commandList->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_NEXT_NOR, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
 
+			float t = ((Dx12Mesh*)mesh)->getKeyFrameT();
+			commandList->SetGraphicsRoot32BitConstants(RS_CONSTANT_T, 1, &t, 0);
+
 			commandList->DrawIndexedInstanced(numberIndices, 1, 0, 0, 0);
 
 			// Unbind textures
@@ -616,6 +631,12 @@ void Dx12Renderer::frame()
 		D3D12_RESOURCE_STATE_RENDER_TARGET,	// state before
 		D3D12_RESOURCE_STATE_PRESENT		// state after
 	);
+
+
+	computeCommandList->Dispatch(1, 1, 1);
+	computeCommandList->Close();
+	ID3D12CommandList* computeListsToExecute[] = { computeCommandList };
+	computeCommandQueue->ExecuteCommandLists(ARRAYSIZE(computeListsToExecute), computeListsToExecute);
 
 	// Close the list to prepare it for execution.
 	commandList->Close();
