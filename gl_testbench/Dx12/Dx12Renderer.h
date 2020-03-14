@@ -21,8 +21,10 @@ public:
 	Dx12Renderer();
 	~Dx12Renderer();
 
+	static const unsigned char numThreads = 1;
 	static const int frameBufferCount = 3; // Currently tripple buffering.
-	int frameIndex; // Current rtv
+	unsigned int frameIndex; // Current rtv
+	unsigned int oldestFrameIndex;
 	float clearColor[4];
 	int direction = 1;
 
@@ -43,14 +45,17 @@ public:
 	ID3D12Resource* depthStencilBuffer;
 	ID3D12CommandQueue* commandQueue;
 	ID3D12CommandQueue* computeCommandQueue;
-	ID3D12CommandAllocator* commandAllocator[frameBufferCount];
-	ID3D12GraphicsCommandList* commandList;
-	ID3D12CommandAllocator* computeCommandAllocator[frameBufferCount];
-	ID3D12GraphicsCommandList* computeCommandList;
-	ID3D12Fence* fence[frameBufferCount];
-	ID3D12PipelineState* computeState;
-	UINT64 fenceValue[frameBufferCount];
+
+	ID3D12Fence* fence;
 	HANDLE fenceEvent;
+	UINT64 fenceValue;
+	UINT64 fenceValues[frameBufferCount * numThreads];
+	ID3D12CommandAllocator* commandAllocator[frameBufferCount * numThreads];
+	ID3D12CommandAllocator* computeCommandAllocator[frameBufferCount * numThreads];
+	ID3D12GraphicsCommandList* commandList[frameBufferCount * numThreads];
+	ID3D12GraphicsCommandList* computeCommandList[frameBufferCount * numThreads];
+
+	ID3D12PipelineState* computeState;
 	IDXGISwapChain3* swapChain;
 	unsigned int clearFlags;
 
@@ -65,6 +70,7 @@ public:
 	Technique* makeTechnique(Material*, RenderState*);
 	void setResourceTransitionBarrier(ID3D12GraphicsCommandList* commandList, ID3D12Resource* resource,
 		D3D12_RESOURCE_STATES StateBefore, D3D12_RESOURCE_STATES StateAfter);
+
 
 	int initialize(unsigned int width, unsigned int height);
 	void setWinTitle(const char* title);
