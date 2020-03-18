@@ -99,6 +99,7 @@ void Dx12RenderState::CreatePipelineState(ID3DBlob * vertexBlob, ID3DBlob * pixe
 
 	// Specify depth testing
 	gpsd.DepthStencilState = dsDesc;
+	gpsd.DSVFormat = DXGI_FORMAT_D32_FLOAT;
 
 	device->CreateGraphicsPipelineState(&gpsd, IID_PPV_ARGS(&pipelineStateObject));
 }

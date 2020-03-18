@@ -34,6 +34,8 @@ Dx12Mesh::~Dx12Mesh()
 	}
 	delete uvs;
 	delete ind;
+	delete resultPosBuffer;
+	delete resultNorBuffer;
 
 	// translation buffers
 	delete wvpBuffer;
@@ -142,6 +144,16 @@ VertexBuffer * Dx12Mesh::getNorDataNext()
 		return nor[currentKeyframe + 1];
 }
 
+VertexBuffer * Dx12Mesh::getPosResultBuffer()
+{
+	return resultPosBuffer;
+}
+
+VertexBuffer * Dx12Mesh::getNorResultBuffer()
+{
+	return resultNorBuffer;
+}
+
 void Dx12Mesh::incKeyframe()
 {
 	keyFrameInc += 0.02;
@@ -186,6 +198,8 @@ void Dx12Mesh::createMeshFromObj(const wchar_t * filepath, unsigned int keyframe
 	nor.push_back(new Dx12VertexBuffer(sizeof(DirectX::XMFLOAT4) * objNor.size(), objNor.size(), device));
 	uvs = new Dx12VertexBuffer(sizeof(DirectX::XMFLOAT2) * objUV.size(), objUV.size(), device);
 	ind = new Dx12IndexBuffer(sizeof(DWORD) * objInd.size(), objInd.size(), device);
+	resultPosBuffer = new Dx12VertexBuffer(sizeof(DirectX::XMFLOAT4) * objPos.size(), objPos.size(), device);
+	resultNorBuffer = new Dx12VertexBuffer(sizeof(DirectX::XMFLOAT4) * objNor.size(), objNor.size(), device);
 
 	pos[0]->setData(&objPos[0], sizeof(DirectX::XMFLOAT4) * objPos.size(), 0);
 	nor[0]->setData(&objNor[0], sizeof(DirectX::XMFLOAT4) * objNor.size(), 0);

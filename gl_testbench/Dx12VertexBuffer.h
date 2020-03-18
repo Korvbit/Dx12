@@ -14,6 +14,7 @@ public:
 	ID3D12Resource* getUploadHeap();
 
 private:
+	UINT8* gpuAddress;
 	ID3D12Device* device;
 	ID3D12Resource* buffer;
 	D3D12_VERTEX_BUFFER_VIEW view;

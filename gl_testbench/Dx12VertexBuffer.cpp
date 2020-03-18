@@ -31,20 +31,19 @@ Dx12VertexBuffer::Dx12VertexBuffer(size_t size, int numEntries, ID3D12Device* re
 	view.BufferLocation = buffer->GetGPUVirtualAddress();
 	view.StrideInBytes = size / numEntries;
 	view.SizeInBytes = size;
+	D3D12_RANGE range = { 0,0 };
+	buffer->Map(0, &range, reinterpret_cast<void**>(&gpuAddress));
 }
 
 Dx12VertexBuffer::~Dx12VertexBuffer()
 {
+	buffer->Unmap(0, nullptr);
 	buffer->Release();
 }
 
 void Dx12VertexBuffer::setData(const void * data, size_t size, size_t offset)
 {
-	UINT8* gpuAddress;
-	D3D12_RANGE range = { 0,0 };
-	buffer->Map(0, &range, reinterpret_cast<void**>(&gpuAddress));
 	memcpy(gpuAddress + offset, data, size);
-	buffer->Unmap(0, nullptr);
 }
 
 D3D12_VERTEX_BUFFER_VIEW * Dx12VertexBuffer::getView()

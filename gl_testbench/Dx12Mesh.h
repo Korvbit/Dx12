@@ -40,6 +40,9 @@ public:
 	VertexBuffer* getNorDataCurrent();
 	VertexBuffer* getPosDataNext();
 	VertexBuffer* getNorDataNext();
+	VertexBuffer* getPosResultBuffer();
+	VertexBuffer* getNorResultBuffer();
+
 	void incKeyframe();
 	float getKeyFrameT();
 	void setCurrentKeyframe(int keyframe);
@@ -56,6 +59,8 @@ private:
 	std::vector<VertexBuffer*> nor;
 	VertexBuffer* uvs;
 	VertexBuffer* ind;
+	VertexBuffer* resultPosBuffer;
+	VertexBuffer* resultNorBuffer;
 
 	unsigned int nrOfKeyframes;
 	unsigned int currentKeyframe;

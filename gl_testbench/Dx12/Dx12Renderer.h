@@ -84,6 +84,7 @@ public:
 
 	bool initializeWindow(HINSTANCE hInstance, int width, int height, bool fullscreen);
 	void WaitForGpu();
+	void WaitForCompute();
 };
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);

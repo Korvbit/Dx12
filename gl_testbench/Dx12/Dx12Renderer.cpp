@@ -174,7 +174,7 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 
 	D3D12_COMMAND_QUEUE_DESC computeQueueDesc = { D3D12_COMMAND_LIST_TYPE_COMPUTE, 0, D3D12_COMMAND_QUEUE_FLAG_NONE };
 	device->CreateCommandQueue(&computeQueueDesc, IID_PPV_ARGS(&computeCommandQueue));
-	commandQueue->SetName(L"computeCommandQueue");
+	computeCommandQueue->SetName(L"computeCommandQueue");
 
 	// Create command allocators and lists
 	for (int i = 0; i < frameBufferCount * numThreads; ++i)
@@ -364,10 +364,15 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	rootParam[RS_SRV_KEYFRAME_NEXT_NOR].Descriptor.ShaderRegister = 3;
 	rootParam[RS_SRV_KEYFRAME_NEXT_NOR].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-	rootParam[RS_UAV_MESH_RESULT].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
-	rootParam[RS_UAV_MESH_RESULT].Descriptor.RegisterSpace = SPACE_COMPUTE;
-	rootParam[RS_UAV_MESH_RESULT].Descriptor.ShaderRegister = 0;
-	rootParam[RS_UAV_MESH_RESULT].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	rootParam[RS_UAV_POS_RESULT].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+	rootParam[RS_UAV_POS_RESULT].Descriptor.RegisterSpace = SPACE_COMPUTE;
+	rootParam[RS_UAV_POS_RESULT].Descriptor.ShaderRegister = 0;
+	rootParam[RS_UAV_POS_RESULT].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+	rootParam[RS_UAV_NOR_RESULT].ParameterType = D3D12_ROOT_PARAMETER_TYPE_UAV;
+	rootParam[RS_UAV_NOR_RESULT].Descriptor.RegisterSpace = SPACE_COMPUTE;
+	rootParam[RS_UAV_NOR_RESULT].Descriptor.ShaderRegister = 1;
+	rootParam[RS_UAV_NOR_RESULT].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
 	rootParam[RS_CONSTANT_T].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
 	rootParam[RS_CONSTANT_T].Constants.Num32BitValues = 1;
@@ -383,14 +388,12 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	rootSignatureDesc.NumStaticSamplers = 0;
 	rootSignatureDesc.pStaticSamplers = nullptr;
 	
-	//D3D12_ROOT_SIGNATURE_DESC computeRootSignatureDesc;
-	//rootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
-	//rootSignatureDesc.NumParameters = RS_PARAM_COUNT;
-	//rootSignatureDesc.pParameters = rootParam;
-	//rootSignatureDesc.NumStaticSamplers = 0;
-	//rootSignatureDesc.pStaticSamplers = nullptr;
-
-	CD3DX12_ROOT_SIGNATURE_DESC computeRootSignatureDesc(0, NULL, 0, NULL, D3D12_ROOT_SIGNATURE_FLAG_NONE);
+	D3D12_ROOT_SIGNATURE_DESC computeRootSignatureDesc;
+	computeRootSignatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_NONE;
+	computeRootSignatureDesc.NumParameters = RS_PARAM_COUNT;
+	computeRootSignatureDesc.pParameters = rootParam;
+	computeRootSignatureDesc.NumStaticSamplers = 0;
+	computeRootSignatureDesc.pStaticSamplers = nullptr;
 
 	ID3DBlob* sBlob, *errorBlob;
 	if (FAILED(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &sBlob, &errorBlob)))
@@ -410,7 +413,8 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 	rootSignature->SetName(L"computeRootSignature");
 
 	ID3DBlob* computeBlob;
-	D3DCompileFromFile(
+
+	HRESULT hr = D3DCompileFromFile(
 		L"ComputeShader.hlsl",
 		nullptr,
 		nullptr,
@@ -421,16 +425,23 @@ int Dx12Renderer::initialize(unsigned int width, unsigned int height)
 		&computeBlob,
 		nullptr
 	);
+	if (FAILED(hr))
+	{
+		printf("Compute Shader Wrong\n");
+	}
 
 	D3D12_COMPUTE_PIPELINE_STATE_DESC computePSODesc = {};
 	computePSODesc.pRootSignature = computeRootSignature;
 	computePSODesc.CS.pShaderBytecode = reinterpret_cast<void*>(computeBlob->GetBufferPointer());
 	computePSODesc.CS.BytecodeLength = computeBlob->GetBufferSize();
 
-	device->CreateComputePipelineState(&computePSODesc, IID_PPV_ARGS(&computeState));
+	if (FAILED(device->CreateComputePipelineState(&computePSODesc, IID_PPV_ARGS(&computeState))))
+	{
+		printf("PSO wrong\n");
+	}
 
 	// increment the fence value now, otherwise the buffer might not be uploaded by the time we start drawing
-	fenceValue++;
+ 	fenceValue++;
 	commandQueue->Signal(fence, fenceValue);
 
 	SafeRelease(&factory);
@@ -449,22 +460,13 @@ void Dx12Renderer::present()
 	swapChain->Present1(0, 0, &pp);
 
 	//WaitForGpu(); //Wait for GPU to finish.
+	//WaitForCompute();
 				  //NOT BEST PRACTICE, only used as such for simplicity.
 }
 
 int Dx12Renderer::shutdown()
 {
-	// Signal when the fence has increased in value
-	const UINT64 signalValue = fenceValue;
-	computeCommandQueue->Signal(fence, signalValue);
-	fenceValue++; // Increment the comparison value inbefore the next call
-
-	// Wait until the value has been incremented
-	if (fence->GetCompletedValue() < signalValue) {
-		fence->SetEventOnCompletion(signalValue, fenceEvent);
-		WaitForSingleObject(fenceEvent, INFINITE);
-	}
-
+	WaitForCompute();
 	SafeRelease(&rootSignature);
 	SafeRelease(&device);
 	SafeRelease(&rtvDescriptorHeap);
@@ -473,6 +475,9 @@ int Dx12Renderer::shutdown()
 	SafeRelease(&commandQueue);
 	SafeRelease(&swapChain);
 	SafeRelease(&fence);
+	SafeRelease(&computeCommandQueue);
+	SafeRelease(&computeState);
+	SafeRelease(&computeRootSignature);
 
 	for (int i = 0; i < frameBufferCount; i++)
 		SafeRelease(&renderTargets[i]);
@@ -480,6 +485,8 @@ int Dx12Renderer::shutdown()
 	for (int i = 0; i < frameBufferCount * numThreads; i++) {
 		SafeRelease(&commandAllocator[i]);
 		SafeRelease(&commandList[i]);
+		SafeRelease(&computeCommandList[i]);
+		SafeRelease(&computeCommandAllocator[i]);
 	}
 
 	return 1;
@@ -510,7 +517,7 @@ void Dx12Renderer::frame()
 	// Compute
 	computeCommandAllocator[frameIndex]->Reset();
 	computeCommandList[frameIndex]->Reset(computeCommandAllocator[frameIndex], computeState);
-	computeCommandList[frameIndex]->SetPipelineState(computeState);
+	computeCommandList[frameIndex]->SetPipelineState(computeState); // Is null
 	computeCommandList[frameIndex]->SetComputeRootSignature(computeRootSignature);
 
 	// Graphics
@@ -565,7 +572,7 @@ void Dx12Renderer::frame()
 		commandList[frameIndex]->SetPipelineState(renderState->getPSO());
 		for (auto mesh : work.second)
 		{
-			size_t numberElements = mesh->geometryBuffers[0].numElements;
+			size_t numberElements = mesh->geometryBuffers[POSITION].numElements;
 			size_t numberIndices = mesh->geometryBuffers[INDEXBUFF].numElements;
 			for (auto t : mesh->textures)
 			{
@@ -590,17 +597,38 @@ void Dx12Renderer::frame()
 
 			cBuffer = (Dx12ConstantBuffer*)(mesh->wvpBuffer);
 			commandList[frameIndex]->SetGraphicsRootConstantBufferView(RS_CB_WVP, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
-			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataCurrent());
-			commandList[frameIndex]->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_CURRENT_POS, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
-			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getNorDataCurrent());
-			commandList[frameIndex]->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_CURRENT_NOR, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
-			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataNext());
-			commandList[frameIndex]->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_NEXT_POS, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
-			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataNext());
-			commandList[frameIndex]->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_NEXT_NOR, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
+			//vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataCurrent());
+			//commandList[frameIndex]->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_CURRENT_POS, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
+			//vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getNorDataCurrent());
+			//commandList[frameIndex]->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_CURRENT_NOR, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
+			//vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataNext());
+			//commandList[frameIndex]->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_NEXT_POS, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
+			//vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataNext());
+			//commandList[frameIndex]->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_NEXT_NOR, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
 
 			float t = ((Dx12Mesh*)mesh)->getKeyFrameT();
-			commandList[frameIndex]->SetGraphicsRoot32BitConstants(RS_CONSTANT_T, 1, &t, 0);
+			//commandList[frameIndex]->SetGraphicsRoot32BitConstants(RS_CONSTANT_T, 1, &t, 0);
+
+			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataCurrent());
+			computeCommandList[frameIndex]->SetComputeRootShaderResourceView(RS_SRV_KEYFRAME_CURRENT_POS, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
+			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getNorDataCurrent());
+			computeCommandList[frameIndex]->SetComputeRootShaderResourceView(RS_SRV_KEYFRAME_CURRENT_NOR, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
+			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataNext());
+			computeCommandList[frameIndex]->SetComputeRootShaderResourceView(RS_SRV_KEYFRAME_NEXT_POS, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
+			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataNext());
+			computeCommandList[frameIndex]->SetComputeRootShaderResourceView(RS_SRV_KEYFRAME_NEXT_NOR, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
+
+			computeCommandList[frameIndex]->SetComputeRoot32BitConstants(RS_CONSTANT_T, 1, &t, 0);
+
+			Dx12VertexBuffer* resultPosBuff = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosResultBuffer());
+			Dx12VertexBuffer* resultNorBuff = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getNorResultBuffer());
+			
+			computeCommandList[frameIndex]->SetComputeRootUnorderedAccessView(RS_UAV_POS_RESULT, resultPosBuff->getUploadHeap()->GetGPUVirtualAddress());
+			computeCommandList[frameIndex]->SetComputeRootUnorderedAccessView(RS_UAV_NOR_RESULT, resultNorBuff->getUploadHeap()->GetGPUVirtualAddress());
+
+			computeCommandList[frameIndex]->Dispatch(numberElements / 32, 1, 1);
+
+			commandList[frameIndex]->SetGraphicsRootUnorderedAccessView(RS_UAV_POS_RESULT, resultPosBuff->getUploadHeap()->GetGPUVirtualAddress());
 
 			commandList[frameIndex]->DrawIndexedInstanced(numberIndices, 1, 0, 0, 0);
 
@@ -623,8 +651,6 @@ void Dx12Renderer::frame()
 	}
 	drawList.clear();
 
-
-	computeCommandList[frameIndex]->Dispatch(1, 1, 1);
 	computeCommandList[frameIndex]->Close();
 	ID3D12CommandList* computeListsToExecute[] = { computeCommandList[frameIndex] };
 	computeCommandQueue->ExecuteCommandLists(ARRAYSIZE(computeListsToExecute), computeListsToExecute);
@@ -635,8 +661,10 @@ void Dx12Renderer::frame()
 		D3D12_RESOURCE_STATE_RENDER_TARGET,	// state before
 		D3D12_RESOURCE_STATE_PRESENT		// state after
 	);
+
 	commandList[frameIndex]->Close();
 	ID3D12CommandList* commandListsToExecute[] = { commandList[frameIndex] };
+	WaitForCompute();
 	commandQueue->ExecuteCommandLists(ARRAYSIZE(commandListsToExecute), commandListsToExecute);
 
 	fenceValues[frameIndex] = fenceValue;
@@ -737,6 +765,20 @@ void Dx12Renderer::WaitForGpu()
 	}
 
 	fenceValue++; // Increment the comparison value inbefore the next call
+}
+
+void Dx12Renderer::WaitForCompute()
+{
+	// Signal when the fence has increased in value
+	const UINT64 signalValue = fenceValue;
+	computeCommandQueue->Signal(fence, signalValue);
+	fenceValue++; // Increment the comparison value inbefore the next call
+
+	// Wait until the value has been incremented
+	if (fence->GetCompletedValue() < signalValue) {
+		fence->SetEventOnCompletion(signalValue, fenceEvent);
+		WaitForSingleObject(fenceEvent, INFINITE);
+	}
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
