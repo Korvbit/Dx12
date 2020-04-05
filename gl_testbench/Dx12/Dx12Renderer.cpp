@@ -597,17 +597,8 @@ void Dx12Renderer::frame()
 
 			cBuffer = (Dx12ConstantBuffer*)(mesh->wvpBuffer);
 			commandList[frameIndex]->SetGraphicsRootConstantBufferView(RS_CB_WVP, cBuffer->getUploadHeap()->GetGPUVirtualAddress());
-			//vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataCurrent());
-			//commandList[frameIndex]->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_CURRENT_POS, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
-			//vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getNorDataCurrent());
-			//commandList[frameIndex]->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_CURRENT_NOR, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
-			//vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataNext());
-			//commandList[frameIndex]->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_NEXT_POS, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
-			//vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataNext());
-			//commandList[frameIndex]->SetGraphicsRootShaderResourceView(RS_SRV_KEYFRAME_NEXT_NOR, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
 
 			float t = ((Dx12Mesh*)mesh)->getKeyFrameT();
-			//commandList[frameIndex]->SetGraphicsRoot32BitConstants(RS_CONSTANT_T, 1, &t, 0);
 
 			vBuffer = (Dx12VertexBuffer*)(((Dx12Mesh*)mesh)->getPosDataCurrent());
 			computeCommandList[frameIndex]->SetComputeRootShaderResourceView(RS_SRV_KEYFRAME_CURRENT_POS, vBuffer->getUploadHeap()->GetGPUVirtualAddress());
@@ -625,10 +616,11 @@ void Dx12Renderer::frame()
 			
 			computeCommandList[frameIndex]->SetComputeRootUnorderedAccessView(RS_UAV_POS_RESULT, resultPosBuff->getUploadHeap()->GetGPUVirtualAddress());
 			computeCommandList[frameIndex]->SetComputeRootUnorderedAccessView(RS_UAV_NOR_RESULT, resultNorBuff->getUploadHeap()->GetGPUVirtualAddress());
-
-			computeCommandList[frameIndex]->Dispatch(numberElements / 32, 1, 1);
+			
+			computeCommandList[frameIndex]->Dispatch(ceil((float)numberElements / 32), 1, 1);
 
 			commandList[frameIndex]->SetGraphicsRootUnorderedAccessView(RS_UAV_POS_RESULT, resultPosBuff->getUploadHeap()->GetGPUVirtualAddress());
+			commandList[frameIndex]->SetGraphicsRootUnorderedAccessView(RS_UAV_NOR_RESULT, resultNorBuff->getUploadHeap()->GetGPUVirtualAddress());
 
 			commandList[frameIndex]->DrawIndexedInstanced(numberIndices, 1, 0, 0, 0);
 

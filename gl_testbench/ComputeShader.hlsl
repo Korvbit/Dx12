@@ -10,9 +10,6 @@ cbuffer constants : register(b0, space2) {
 
 [numthreads(32, 1, 1)]
 void CS_main(uint3 dtID : SV_DispatchThreadID) {
-	/*float4 tempVec[367];
-	tempVec[dtID.x] = lerp(posCurrent[dtID.x], posNext[dtID.x], t);
-*/
 	posOut[dtID.x] = lerp(posCurrent[dtID.x], posNext[dtID.x], t);
 	norOut[dtID.x] = lerp(norCurrent[dtID.x], norNext[dtID.x], t);
 }
