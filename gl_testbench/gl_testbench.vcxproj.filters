@@ -90,6 +90,9 @@
     <ClCompile Include="Temp.cpp">
       <Filter>Source Files\Dx12</Filter>
     </ClCompile>
+    <ClCompile Include="D3D12Timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -172,6 +175,9 @@
     </ClInclude>
     <ClInclude Include="WaveFrontReader.h">
       <Filter>Source Files\Dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Timer.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -13,6 +13,7 @@
 #include "d3dx12.h"
 #include "functions.h"
 #include "..//Dx12Camera.h"
+#include "..//D3D12Timer.h"
 
 class Dx12Renderer :
 	public Renderer
@@ -20,6 +21,10 @@ class Dx12Renderer :
 public:
 	Dx12Renderer();
 	~Dx12Renderer();
+
+	// Measurement Stuff
+	double timesMeasured = 0;
+	double time = 0;
 
 	static const unsigned char numThreads = 1;
 	static const int frameBufferCount = 3; // Currently tripple buffering.

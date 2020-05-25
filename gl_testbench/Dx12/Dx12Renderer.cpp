@@ -1,5 +1,7 @@
 #include "Dx12Renderer.h"
 
+static D3D12::D3D12Timer gpuTimer;
+
 Dx12Renderer::Dx12Renderer()
 {
 	rootSignature = nullptr;
@@ -622,7 +624,19 @@ void Dx12Renderer::frame()
 			commandList[frameIndex]->SetGraphicsRootUnorderedAccessView(RS_UAV_POS_RESULT, resultPosBuff->getUploadHeap()->GetGPUVirtualAddress());
 			commandList[frameIndex]->SetGraphicsRootUnorderedAccessView(RS_UAV_NOR_RESULT, resultNorBuff->getUploadHeap()->GetGPUVirtualAddress());
 
+			static int a = 1;
+			if (a == 1)
+			{
+				gpuTimer.init(device, 1);
+				a++;
+			}
+			
+
+			gpuTimer.start(commandList[frameIndex], 0);
 			commandList[frameIndex]->DrawIndexedInstanced(numberIndices, 1, 0, 0, 0);
+			gpuTimer.stop(commandList[frameIndex], 0);
+
+			gpuTimer.resolveQueryToCPU(commandList[frameIndex], 0);
 
 			// Unbind textures
 			for (auto t : mesh->textures)
@@ -667,6 +681,23 @@ void Dx12Renderer::frame()
 		WaitForSingleObject(fenceEvent, INFINITE);
 		if (++oldestFrameIndex >= frameBufferCount)
 			oldestFrameIndex = 0;
+	}
+
+
+
+	D3D12::GPUTimestampPair drawTime = gpuTimer.getTimestampPair(0);
+	UINT64 finalTime = drawTime.Stop - drawTime.Start;
+
+	if (timesMeasured < 10000)
+	{
+		time += finalTime;
+		timesMeasured++;
+	}
+	else if (timesMeasured == 10000)
+	{
+		time /= timesMeasured;
+		printf("Drawtime average of 10k frames: %f\n", time);
+		timesMeasured++;
 	}
 }
 
